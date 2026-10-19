@@ -69,21 +69,21 @@ struct AntiAimConfig_t {
 
 // ──────────────── VISUALS ────────────────
 struct VisualsPlayer_t {
-    bool  esp_box = false;
-    bool  esp_name = false;
-    bool  esp_health = false;
-    bool  esp_weapon = false;
-    bool  esp_skeleton = false;
+    bool esp_box = false;
+    bool esp_name = false;
+    bool esp_health = false;
+    bool esp_armor = false;
+    bool esp_weapon = false;
+    bool esp_distance = false;
+    bool esp_skeleton = false;
     float skel_color[4] = { 0.24f, 0.55f, 0.83f, 1.0f };
-    bool  chams = false;
-    int   chams_mat = 0;
+    bool chams = false;
+    int chams_mat = 0;
     float chams_vis[4] = { 0.24f, 0.55f, 0.83f, 1.0f };
     float chams_occ[4] = { 0.85f, 0.05f, 0.03f, 1.0f };
-    bool  glow = false;
+    bool glow = false;
     float glow_color[4] = { 0.85f, 0.05f, 0.03f, 1.0f };
-
-    // ── camera ──
-    bool  third_person = false;
+    bool third_person = false;
     float third_person_dist = 150.0f;
 };
 

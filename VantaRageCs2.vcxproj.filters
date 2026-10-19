@@ -170,9 +170,6 @@
     <ClCompile Include="src\sdk.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="src\entity.cpp">
-      <Filter>Archivos de origen</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\minhook\src\buffer.c">
       <Filter>Archivos de origen</Filter>
     </ClCompile>

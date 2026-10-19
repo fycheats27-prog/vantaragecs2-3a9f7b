@@ -168,7 +168,6 @@
     <ClCompile Include="vendor\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\memory.cpp" />
     <ClCompile Include="src\sdk.cpp" />
-    <ClCompile Include="src\entity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vendor\minhook\src\buffer.c">
