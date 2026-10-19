@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "VantaRageCs2\\x64\\Debug\\render.obj",
+            "outputs": [
+                "VantaRageCs2\\x64\\Debug\\render.h.obj.dt.module.json",
+                "VantaRageCs2\\x64\\Debug\\render.h.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

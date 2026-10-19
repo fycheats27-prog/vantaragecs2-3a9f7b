@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "VantaRageCs2\\x64\\Debug\\thirdperson.obj",
+            "outputs": [
+                "VantaRageCs2\\x64\\Debug\\thirdperson.h.obj.dt.module.json",
+                "VantaRageCs2\\x64\\Debug\\thirdperson.h.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

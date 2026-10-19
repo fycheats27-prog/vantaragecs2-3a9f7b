@@ -1,0 +1,21 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\thirdperson.cpp",
+        "ProvidedModule": "",
+        "Includes": [
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\thirdperson.h",
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\config.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\cstdint",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\yvals_core.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\vcruntime.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\sal.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\concurrencysal.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\vadefs.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\xkeycheck.h",
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\stdint.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

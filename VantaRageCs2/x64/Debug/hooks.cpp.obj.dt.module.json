@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "VantaRageCs2\\x64\\Debug\\hooks.obj",
+            "outputs": [
+                "VantaRageCs2\\x64\\Debug\\hooks.cpp.obj.dt.module.json",
+                "VantaRageCs2\\x64\\Debug\\hooks.cpp.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

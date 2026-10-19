@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="VantaRageCs2.vcxproj" Id="1df64b89-c11a-4675-928e-8b76d02f3d27" />
+</Solution>
