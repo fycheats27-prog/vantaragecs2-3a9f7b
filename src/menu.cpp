@@ -283,7 +283,9 @@ namespace Menu {
         Widgets::Toggle("box", &g_cfg.visuals.player.esp_box);
         Widgets::Toggle("name", &g_cfg.visuals.player.esp_name);
         Widgets::Toggle("health", &g_cfg.visuals.player.esp_health);
+        Widgets::Toggle("armor", &g_cfg.visuals.player.esp_armor);     // era missing
         Widgets::Toggle("weapon", &g_cfg.visuals.player.esp_weapon);
+        Widgets::Toggle("distance", &g_cfg.visuals.player.esp_distance);  // era missing
         Widgets::Toggle("skeleton", &g_cfg.visuals.player.esp_skeleton);
         if (g_cfg.visuals.player.esp_skeleton)
             Widgets::ColorEdit("skeleton color", g_cfg.visuals.player.skel_color);

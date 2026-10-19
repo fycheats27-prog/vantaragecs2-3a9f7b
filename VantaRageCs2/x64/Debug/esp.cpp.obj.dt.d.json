@@ -133,6 +133,7 @@
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\um\\mcx.h",
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\um\\imm.h",
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\um\\ime_cmodes.h",
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\entity.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\debug.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\vendor\\imgui\\imgui.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\vendor\\imgui\\imconfig.h",
@@ -211,8 +212,7 @@
             "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\algorithm",
             "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\__msvc_heap_algorithms.hpp",
             "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\__msvc_minmax.hpp",
-            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\cmath",
-            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\cctype"
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\cmath"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
