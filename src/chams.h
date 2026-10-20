@@ -1,3 +1,4 @@
+// --- chams.h ---
 #pragma once
 
 namespace Features::Visuals::Chams {

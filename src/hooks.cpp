@@ -60,7 +60,7 @@ namespace Hooks {
 
         // Hook OverrideView para Third Person
         uintptr_t ov = g_client + kOverrideViewRVA;
-        Debug::g_tp.v250 = *(uint8_t*)ov;
+        Debug::g_tp.v250 = *(uint8_t*)ov;   
         Debug::g_tp.v228 = *(uint8_t*)(ov + 1);
         if (MH_CreateHook((LPVOID)ov, &hk_OverrideView, reinterpret_cast<LPVOID*>(&o_OverrideView)) == MH_OK)
             MH_EnableHook((LPVOID)ov);

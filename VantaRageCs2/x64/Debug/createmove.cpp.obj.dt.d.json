@@ -6,7 +6,8 @@
         "Includes": [
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\createmove.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\bhop.h",
-            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\aimbot.h"
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\aimbot.h",
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\config.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
