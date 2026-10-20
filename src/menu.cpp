@@ -279,36 +279,50 @@ namespace Menu {
     // ═══════════════════════════════════════════════════════════════
 
     static void VisualsPlayerTab() {
-        Widgets::Section("player esp");
-        Widgets::Toggle("box", &g_cfg.visuals.player.esp_box);
-        Widgets::Toggle("name", &g_cfg.visuals.player.esp_name);
-        Widgets::Toggle("health", &g_cfg.visuals.player.esp_health);
-        Widgets::Toggle("armor", &g_cfg.visuals.player.esp_armor);     // era missing
-        Widgets::Toggle("weapon", &g_cfg.visuals.player.esp_weapon);
-        Widgets::Toggle("distance", &g_cfg.visuals.player.esp_distance);  // era missing
-        Widgets::Toggle("skeleton", &g_cfg.visuals.player.esp_skeleton);
-        if (g_cfg.visuals.player.esp_skeleton)
-            Widgets::ColorEdit("skeleton color", g_cfg.visuals.player.skel_color);
+        auto& p = g_cfg.visuals.player;
 
-        Widgets::Section("model");
-        Widgets::Toggle("chams", &g_cfg.visuals.player.chams);
-        if (g_cfg.visuals.player.chams) {
-            const char* mats[] = { "flat", "latex", "glow", "glass" };
-            Widgets::Combo("material", &g_cfg.visuals.player.chams_mat, mats, IM_ARRAYSIZE(mats));
-            Widgets::ColorEdit("visible", g_cfg.visuals.player.chams_vis);
-            Widgets::ColorEdit("occluded", g_cfg.visuals.player.chams_occ);
+        Widgets::Section("player esp");
+        Widgets::Toggle("box", &p.esp_box);
+        if (p.esp_box) {
+            Widgets::ColorEdit("box enemy", p.box_enemy);
+            Widgets::ColorEdit("box team", p.box_team);
         }
+        Widgets::Toggle("name", &p.esp_name);
+        if (p.esp_name) Widgets::ColorEdit("name color", p.name_color);
+        Widgets::Toggle("health", &p.esp_health);
+        Widgets::Toggle("armor", &p.esp_armor);
+        Widgets::Toggle("weapon", &p.esp_weapon);
+        if (p.esp_weapon) Widgets::ColorEdit("weapon color", p.weapon_color);
+        Widgets::Toggle("distance", &p.esp_distance);
+        if (p.esp_distance) Widgets::ColorEdit("distance color", p.distance_color);
+        Widgets::Toggle("skeleton", &p.esp_skeleton);
+        if (p.esp_skeleton) Widgets::ColorEdit("skeleton color", p.skel_color);
 
         Widgets::Section("glow");
-        Widgets::Toggle("enabled", &g_cfg.visuals.player.glow);
-        if (g_cfg.visuals.player.glow)
-            Widgets::ColorEdit("glow color", g_cfg.visuals.player.glow_color);
+        Widgets::Toggle("enabled", &p.glow);
+        if (p.glow) {
+            Widgets::ColorEdit("glow enemy", p.glow_enemy);
+            Widgets::ColorEdit("glow team", p.glow_team);
+            Widgets::Toggle("glow weapons", &p.glow_weapons);
+            if (p.glow_weapons) Widgets::ColorEdit("weapon glow", p.glow_weapon_color);
+            Widgets::Toggle("glow bomb", &p.glow_bomb);
+            if (p.glow_bomb) Widgets::ColorEdit("bomb glow", p.glow_bomb_color);
+        }
+
+        Widgets::Section("chams");
+        Widgets::Toggle("enabled", &p.chams);
+        if (p.chams) {
+            const char* mats[] = { "flat", "latex", "glow", "glass" };
+            Widgets::Combo("material", &p.chams_mat, mats, IM_ARRAYSIZE(mats));
+            Widgets::ColorEdit("visible", p.chams_vis);
+            Widgets::ColorEdit("occluded", p.chams_occ);
+            Widgets::Toggle("team chams", &p.chams_team);
+        }
 
         Widgets::Section("camera");
-        Widgets::Toggle("third person", &g_cfg.visuals.player.third_person);
-        if (g_cfg.visuals.player.third_person)
-            Widgets::SliderFloat("distance", &g_cfg.visuals.player.third_person_dist,
-                50.0f, 400.0f, "%.0f");
+        Widgets::Toggle("third person", &p.third_person);
+        if (p.third_person)
+            Widgets::SliderFloat("distance", &p.third_person_dist, 50.f, 400.f, "%.0f");
     }
 
     static void VisualsWorldTab() {
@@ -323,6 +337,7 @@ namespace Menu {
         Widgets::Section("world");
         Widgets::Toggle("dropped weapons", &g_cfg.visuals.world.dropped_weapons);
         Widgets::Toggle("grenade prediction", &g_cfg.visuals.world.grenade_pred);
+        Widgets::Toggle("bomb esp", &g_cfg.visuals.world.bomb_esp);
         Widgets::Toggle("bomb timer", &g_cfg.visuals.world.bomb_timer);
         Widgets::Toggle("damage markers", &g_cfg.visuals.world.damage_markers);
         Widgets::Toggle("no scope overlay", &g_cfg.visuals.world.no_scope);

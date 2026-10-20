@@ -225,12 +225,10 @@
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\um\\d3d10effect.h",
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\um\\d3d10_1shader.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\createmove.h",
-            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\thirdperson.h",
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\chams.h",
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\debug.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\vendor\\minhook\\include\\minhook.h",
-            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\cstdio",
-            "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\ucrt\\stdio.h",
-            "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\ucrt\\corecrt_wstdio.h",
-            "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\ucrt\\corecrt_stdio_config.h"
+            "c:\\program files\\microsoft visual studio\\18\\community\\vc\\tools\\msvc\\14.44.35207\\include\\cmath"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

@@ -108,10 +108,13 @@
     <ClInclude Include="vendor\minhook\src\hde\pstdint.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="src\thirdperson.h">
+    <ClInclude Include="src\esp.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="src\esp.h">
+    <ClInclude Include="src\chams.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\aimbot.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
@@ -182,10 +185,13 @@
     <ClCompile Include="vendor\minhook\src\hde\hde64.c">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="src\thirdperson.cpp">
+    <ClCompile Include="src\esp.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="src\esp.cpp">
+    <ClCompile Include="src\chams.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\aimbot.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>

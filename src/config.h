@@ -1,18 +1,15 @@
-// language: C++, file: config.h
-// *Config global completo. Los widgets escriben aquí, el rage lo lee desde CreateMove.*
-
+// --- config.h ---
 #pragma once
 
 // ──────────────── RAGE ────────────────
 struct RageAimbot_t {
     bool  enabled = false;
-    int   key = 0x06;   // mouse5 por defecto
+    int   key = 0x06;
     bool  silent = true;
     bool  auto_fire = false;
     bool  auto_scope = false;
-    int   auto_stop = 0;      // 0=off 1=slow 2=full
+    int   auto_stop = 0;
 
-    // hitbox selection — 6 bools
     bool  hit_head = true;
     bool  hit_neck = true;
     bool  hit_chest = true;
@@ -42,7 +39,7 @@ struct RageExploits_t {
     bool  double_tap = false;
     bool  hide_shots = false;
     bool  rapid_fire = false;
-    int   tickbase = 0;      // 0=off 1=teleport 2=charge 3=fake lag
+    int   tickbase = 0;
     int   fake_lag_ms = 0;
 };
 
@@ -55,44 +52,65 @@ struct RageConfig_t {
 // ──────────────── ANTI-AIM ────────────────
 struct AntiAimConfig_t {
     bool  enabled = false;
-    int   mode = 0;      // 0=jitter 1=spin 2=static 3=random
-    int   pitch = 0;      // 0=down 1=up 2=zero 3=fake
-    int   yaw_base = 0;      // -180..180
-    int   yaw_add = 0;      // -180..180
-    int   jitter_range = 90;     // 0..180
-    int   spin_speed = 30;     // 1..90
+    int   mode = 0;
+    int   pitch = 0;
+    int   yaw_base = 0;
+    int   yaw_add = 0;
+    int   jitter_range = 90;
+    int   spin_speed = 30;
     bool  fake_yaw = false;
-    int   fake_yaw_amount = 58;     // 0..60
-    int   desync_side = 0;      // 0=auto 1=left 2=right
-    int   on_shot = 0;      // 0=off 1=fake 2=reverse
+    int   fake_yaw_amount = 58;
+    int   desync_side = 0;
+    int   on_shot = 0;
 };
 
 // ──────────────── VISUALS ────────────────
 struct VisualsPlayer_t {
-    bool esp_box = false;
-    bool esp_name = false;
-    bool esp_health = false;
-    bool esp_armor = false;
-    bool esp_weapon = false;
-    bool esp_distance = false;
-    bool esp_skeleton = false;
+    bool  esp_box = false;
+    bool  esp_name = false;
+    bool  esp_health = false;
+    bool  esp_armor = false;
+    bool  esp_weapon = false;
+    bool  esp_distance = false;
+    bool  esp_skeleton = false;
+
+    float box_color[4] = { 0.92f, 0.28f, 0.28f, 1.0f };
+    float box_enemy[4] = { 0.92f, 0.28f, 0.28f, 1.f };
+    float box_team[4] = { 0.34f, 0.84f, 0.55f, 1.f };
+    float name_color[4] = { 0.96f, 0.96f, 0.96f, 1.0f };
     float skel_color[4] = { 0.24f, 0.55f, 0.83f, 1.0f };
-    bool chams = false;
-    int chams_mat = 0;
-    float chams_vis[4] = { 0.24f, 0.55f, 0.83f, 1.0f };
-    float chams_occ[4] = { 0.85f, 0.05f, 0.03f, 1.0f };
-    bool glow = false;
-    float glow_color[4] = { 0.85f, 0.05f, 0.03f, 1.0f };
-    bool third_person = false;
-    float third_person_dist = 150.0f;
+    float weapon_color[4] = { 0.84f, 0.84f, 0.84f, 1.0f };
+    float distance_color[4] = { 0.75f, 0.75f, 0.75f, 1.0f };
+
+    bool  third_person = false;
+    float third_person_dist = 120.f;
+
+    bool  glow = false;
+    float glow_color[4] = { 1.f, 0.25f, 0.25f, 1.f };   // menu reads this
+    float glow_enemy[4] = { 1.f, 0.25f, 0.25f, 1.f };
+    float glow_team[4] = { 0.25f, 1.f, 0.4f, 1.f };
+    bool  glow_weapons = false;
+    bool  glow_bomb = false;
+    float glow_weapon_color[4] = { 1.f, 0.85f, 0.2f, 1.f };
+    float glow_bomb_color[4] = { 1.f, 0.4f, 0.15f, 1.f };
+
+    bool  chams = false;
+    bool  chams_team = false;
+    int   chams_mat = 0;                                // menu combo
+    float chams_vis[4] = { 1.f, 0.3f, 0.3f, 1.f };      // menu color
+    float chams_occ[4] = { 0.3f, 0.6f, 1.f, 1.f };      // menu color
+    float chams_visible[4] = { 1.f, 0.3f, 0.3f, 1.f };
+    float chams_hidden[4] = { 0.3f, 0.6f, 1.f, 1.f };
 };
 
 struct VisualsWorld_t {
     bool  radar = false;
-    int   radar_pos = 0;      // 0=left 1=right 2=center
-    int   radar_zoom = 20;     // 0..100
+    int   radar_pos = 0;
+    int   radar_zoom = 20;
+
     bool  dropped_weapons = false;
     bool  grenade_pred = false;
+    bool  bomb_esp = false;
     bool  bomb_timer = false;
     bool  damage_markers = false;
     bool  no_scope = false;
@@ -125,8 +143,8 @@ struct MiscExploits_t {
 };
 
 struct MiscInput_t {
-    int   menu_key = 0x2D;   // Insert
-    int   unload_key = 0x23;   // End
+    int   menu_key = 0x2D;
+    int   unload_key = 0x23;
 };
 
 struct MiscConfig_t {
@@ -138,16 +156,11 @@ struct MiscConfig_t {
 
 // ──────────────── UI ────────────────
 struct UIConfig_t {
-    // background
-    int   bg_style = 1;      // Particles
-    float bg_intensity = 1.0f;   // 0.0 - 2.0
-    float bg_speed = 1.0f;   // 0.0 - 3.0
-
-    // window
-    float window_alpha = 0.88f;  // 0.30 - 1.00
-
-    // theme
-    int   theme_preset = 0;      // 0=cold blue ... 5=rose, 6=custom
+    int   bg_style = 1;
+    float bg_intensity = 1.0f;
+    float bg_speed = 1.0f;
+    float window_alpha = 0.88f;
+    int   theme_preset = 0;
     float accent_custom[4] = { 0.24f, 0.55f, 0.83f, 1.0f };
 };
 
