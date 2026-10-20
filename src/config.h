@@ -2,23 +2,115 @@
 #pragma once
 
 // ──────────────── RAGE ────────────────
-struct RageAimbot_t {
-    bool  enabled = false;
-    int   key = 0x06;
-    bool  silent = true;
+
+enum class WeaponCategory : int {
+    Pistol = 0,
+    Rifle,
+    Sniper,
+    SMG,
+    Shotgun,
+    MG,
+    Other,
+    COUNT
+};
+
+struct WeaponConfig {
+    int   fov = 15;
+    int   max_targets = 12;
+    bool  hit_head = true;
+    bool  hit_neck = false;
+    bool  hit_chest = false;
+    bool  hit_stomach = false;
+    bool  hit_pelvis = false;
+    bool  hit_legs = false;
+    bool  prediction = true;
+    float prediction_scale = 1.0f;
+    float smooth = 0.35f;
+    int   reaction_ms = 50;
     bool  auto_fire = false;
     bool  auto_scope = false;
     int   auto_stop = 0;
+};
 
+struct RageAimbot_t {
+    // ── Global ──
+    bool  enabled = false;
+    int   key = 0;
+    bool  silent = false;
+    bool  toggle_mode = false;
+    bool  target_team = false;
+    bool  show_fov = false;
+
+    // ── Per-weapon ──
+    WeaponConfig weapons[(int)WeaponCategory::COUNT];
+
+    RageAimbot_t() {
+        for (int i = 0; i < (int)WeaponCategory::COUNT; ++i) {
+            auto& w = weapons[i];
+            w.fov = 180;
+            w.max_targets = 12;
+            w.hit_head = true;
+            w.hit_neck = true;
+            w.hit_chest = true;
+            w.hit_stomach = true;
+            w.hit_pelvis = true;
+            w.hit_legs = true;
+            w.prediction = true;
+            w.prediction_scale = 1.0f;
+            w.smooth = 0.0f;
+            w.reaction_ms = 0;
+            w.auto_fire = true;
+            w.auto_scope = false;
+            w.auto_stop = 2;
+        }
+
+        weapons[(int)WeaponCategory::Sniper].auto_scope = true;
+
+        auto& other = weapons[(int)WeaponCategory::Other];
+        other.fov = 5;
+        other.max_targets = 1;
+        other.hit_neck = false;
+        other.hit_chest = false;
+        other.hit_stomach = false;
+        other.hit_pelvis = false;
+        other.hit_legs = false;
+        other.prediction = false;
+        other.auto_fire = false;
+        other.auto_scope = false;
+        other.auto_stop = 0;
+    }
+};
+
+// ──────────────── TRIGGERBOT ────────────────
+struct TriggerWeaponConfig {
+    bool  enabled = true;
+    float fov = 1.5f;   // grados desde el crosshair
+    int   delay_ms = 30;
     bool  hit_head = true;
-    bool  hit_neck = true;
+    bool  hit_neck = false;
     bool  hit_chest = true;
     bool  hit_stomach = false;
     bool  hit_pelvis = false;
     bool  hit_legs = false;
+    bool  prediction = false;
+};
 
-    int   fov = 180;
-    int   max_targets = 1;
+struct RageTrigger_t {
+    // ── Global ──
+    bool  enabled = false;
+    int   key = 0;
+    bool  toggle_mode = false;
+    bool  target_team = false;
+
+    // ── Per-weapon ──
+    TriggerWeaponConfig weapons[(int)WeaponCategory::COUNT];
+
+    RageTrigger_t() {
+        for (int i = 0; i < (int)WeaponCategory::COUNT; ++i) {
+            weapons[i] = TriggerWeaponConfig{};
+        }
+        weapons[(int)WeaponCategory::Other].enabled = false;
+    }
 };
 
 struct RageAccuracy_t {
@@ -45,6 +137,7 @@ struct RageExploits_t {
 
 struct RageConfig_t {
     RageAimbot_t   aimbot;
+    RageTrigger_t  trigger;    // ✅ NUEVO
     RageAccuracy_t accuracy;
     RageExploits_t exploits;
 };
@@ -86,7 +179,7 @@ struct VisualsPlayer_t {
     float third_person_dist = 120.f;
 
     bool  glow = false;
-    float glow_color[4] = { 1.f, 0.25f, 0.25f, 1.f };   // menu reads this
+    float glow_color[4] = { 1.f, 0.25f, 0.25f, 1.f };
     float glow_enemy[4] = { 1.f, 0.25f, 0.25f, 1.f };
     float glow_team[4] = { 0.25f, 1.f, 0.4f, 1.f };
     bool  glow_weapons = false;
@@ -96,9 +189,9 @@ struct VisualsPlayer_t {
 
     bool  chams = false;
     bool  chams_team = false;
-    int   chams_mat = 0;                                // menu combo
-    float chams_vis[4] = { 1.f, 0.3f, 0.3f, 1.f };      // menu color
-    float chams_occ[4] = { 0.3f, 0.6f, 1.f, 1.f };      // menu color
+    int   chams_mat = 0;
+    float chams_vis[4] = { 1.f, 0.3f, 0.3f, 1.f };
+    float chams_occ[4] = { 0.3f, 0.6f, 1.f, 1.f };
     float chams_visible[4] = { 1.f, 0.3f, 0.3f, 1.f };
     float chams_hidden[4] = { 0.3f, 0.6f, 1.f, 1.f };
 };

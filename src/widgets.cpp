@@ -351,11 +351,15 @@ namespace Widgets {
     // ═══════════════════════════════════════════════════════════════
 
     bool Keybind(const char* label, int* key) {
+        static bool s_waiting = false;
+        static int  s_skip_frames = 0;
+        static bool s_block_lmb = false;
+
         ImGui::PushID(label);
         ImGui::PushID(key);
 
         ImGui::TextUnformatted(label);
-        const char* current = KeyName(*key);
+        const char* current = s_waiting ? "press key..." : KeyName(*key);
 
         float box_w = 100.0f;
         ImGui::SameLine(ImGui::GetContentRegionAvail().x - box_w);
@@ -367,43 +371,89 @@ namespace Widgets {
         bool clicked_r = ImGui::IsItemClicked(ImGuiMouseButton_Right);
         bool hovered = ImGui::IsItemHovered();
 
+        // Click derecho: limpiar
+        if (clicked_r) {
+            *key = 0;
+            s_waiting = false;
+            s_block_lmb = false;
+        }
+
+        // Click izquierdo: entrar en modo captura (ignorando el click actual)
+        if (clicked_l && !s_waiting) {
+            s_waiting = true;
+            s_skip_frames = 2;
+            s_block_lmb = true;
+        }
+
+        // Captura
+        if (s_waiting) {
+            if (s_skip_frames > 0) {
+                s_skip_frames--;
+                // Si el LMB se soltó durante el skip, desbloquearlo
+                if (s_block_lmb && !(GetAsyncKeyState(VK_LBUTTON) & 0x8000))
+                    s_block_lmb = false;
+            }
+            else {
+                // Teclas del teclado (excluyendo el ratón)
+                for (int vk = 0x08; vk <= 0xFE; ++vk) {
+                    if (vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON) continue;
+                    if (GetAsyncKeyState(vk) & 0x8000) {
+                        *key = vk;
+                        s_waiting = false;
+                        s_block_lmb = false;
+                        break;
+                    }
+                }
+
+                // Botones del ratón (excepto LMB mientras está bloqueado)
+                if (s_waiting) {
+                    if (GetAsyncKeyState(VK_RBUTTON) & 0x8000) { *key = VK_RBUTTON;  s_waiting = false; s_block_lmb = false; }
+                    else if (GetAsyncKeyState(VK_MBUTTON) & 0x8000) { *key = VK_MBUTTON; s_waiting = false; s_block_lmb = false; }
+                    else if (GetAsyncKeyState(VK_XBUTTON1) & 0x8000) { *key = VK_XBUTTON1; s_waiting = false; s_block_lmb = false; }
+                    else if (GetAsyncKeyState(VK_XBUTTON2) & 0x8000) { *key = VK_XBUTTON2; s_waiting = false; s_block_lmb = false; }
+                    else if (!s_block_lmb && (GetAsyncKeyState(VK_LBUTTON) & 0x8000)) {
+                        *key = VK_LBUTTON; s_waiting = false; s_block_lmb = false;
+                    }
+                }
+
+                // Si LMB se soltó, desbloquear
+                if (s_block_lmb && !(GetAsyncKeyState(VK_LBUTTON) & 0x8000))
+                    s_block_lmb = false;
+
+                // Escape cancela
+                if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
+                    s_waiting = false;
+                    s_block_lmb = false;
+                }
+            }
+        }
+
+        // Dibujado de la caja
         ImDrawList* dl = ImGui::GetWindowDrawList();
         ImVec2 e(p.x + box_w, p.y + h);
         ImVec4 A = Style::Accent();
 
         ImU32 bg = ImGui::GetColorU32(kBgWid);
-        if (hovered) bg = ImGui::GetColorU32(kBgHover);
-        if (*key != 0) {
+        if (s_waiting) {
+            ImVec4 Aw(A.x, A.y, A.z, 0.18f);
+            bg = ImGui::GetColorU32(Aw);
+        }
+        else if (hovered) {
+            bg = ImGui::GetColorU32(kBgHover);
+        }
+        else if (*key != 0) {
             ImVec4 Asoft(A.x, A.y, A.z, 0.14f);
             bg = ImGui::GetColorU32(Asoft);
         }
 
         dl->AddRectFilled(p, e, bg, 4.0f);
-        ImU32 bd = *key != 0 ? ImGui::GetColorU32(A)
-            : ImGui::GetColorU32(kBorder);
-        dl->AddRect(p, e, bd, 4.0f, 0, 1.0f);
+        ImU32 bd = (s_waiting || *key != 0) ? ImGui::GetColorU32(A) : ImGui::GetColorU32(kBorder);
+        dl->AddRect(p, e, bd, 4.0f, 0, s_waiting ? 1.5f : 1.0f);
 
         ImVec2 ts = ImGui::CalcTextSize(current);
-        ImU32 tc = *key != 0 ? ImGui::GetColorU32(ImVec4(0.95f, 0.96f, 0.98f, 1.0f))
-            : ImGui::GetColorU32(kText);
-        dl->AddText(ImVec2(p.x + (box_w - ts.x) * 0.5f, p.y + (h - ts.y) * 0.5f),
-            tc, current);
-
-        if (clicked_l) ImGui::OpenPopup("##kbp");
-        if (clicked_r) *key = 0;
-
-        if (ImGui::BeginPopup("##kbp")) {
-            ImGui::TextColored(kTextDim, "press a key");
-            ImGui::Separator();
-            for (int vk = 1; vk < 256; vk++) {
-                if (GetAsyncKeyState(vk) & 0x8000) {
-                    *key = vk;
-                    ImGui::CloseCurrentPopup();
-                    break;
-                }
-            }
-            ImGui::EndPopup();
-        }
+        ImU32 tc = (s_waiting || *key != 0) ? ImGui::GetColorU32(ImVec4(0.95f, 0.96f, 0.98f, 1.0f))
+            : ImGui::GetColorU32(kTextDim);
+        dl->AddText(ImVec2(p.x + (box_w - ts.x) * 0.5f, p.y + (h - ts.y) * 0.5f), tc, current);
 
         ImGui::PopID();
         ImGui::PopID();

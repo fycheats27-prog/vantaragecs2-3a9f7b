@@ -1,12 +1,14 @@
 // language: C++, file: src/hooks/present.cpp
 // *Present hook (DXGI vtable idx 8) + WndProc + ImGui lifecycle.*
-// *Incluye el renderizado del ESP.*
+// *Incluye el renderizado del ESP y el círculo de FOV.*
 
 #include <MinHook.h>
 #include "present.h"
 #include "style.h"
 #include "menu.h"
-#include "esp.h" // <-- Añadido para el ESP
+#include "esp.h"
+#include "aimbot.h"
+#include "config.h"
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>
@@ -29,6 +31,17 @@ namespace Present {
 
     using PresentFn = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT);
     static PresentFn g_original_present = nullptr;
+
+    static void DrawFovCircle() {
+        if (!g_cfg.rage.aimbot.enabled || !g_cfg.rage.aimbot.show_fov) return;
+        ImGuiIO& io = ImGui::GetIO();
+        float cx = io.DisplaySize.x * 0.5f;
+        float cy = io.DisplaySize.y * 0.5f;
+        int fov = Features::Rage::Aimbot::GetFov();
+        float radius = (fov / 90.0f) * (io.DisplaySize.y * 0.5f);
+        ImDrawList* dl = ImGui::GetBackgroundDrawList();
+        dl->AddCircle(ImVec2(cx, cy), radius, IM_COL32(36, 140, 210, 140), 64, 1.5f);
+    }
 
     static LRESULT __stdcall WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         if (g_unload_requested.load(std::memory_order_acquire))
@@ -115,14 +128,12 @@ namespace Present {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Dibujar el menú (si está abierto)
         if (g_menu_open)
             Menu::Draw();
 
-        // 2. Dibujar el ESP (siempre, independientemente del menú)
         Features::Visuals::ESP::Render();
+        DrawFovCircle();
 
-        // 3. Renderizar todo
         ImGui::Render();
 
         ID3D11Texture2D* backbuffer = nullptr;

@@ -8,7 +8,7 @@ namespace Debug {
     BhopState g_bhop;
     ThirdPersonState g_tp;
     EspState  g_esp;
-    AimbotState g_aim; // ✅ NUEVO
+    AimbotState g_aim;
 
     static DWORD s_last_flush = 0;
 
@@ -34,9 +34,9 @@ namespace Debug {
         fprintf(f, "bhop_enabled  = %d\n", g_bhop.bhop_enabled);
         fprintf(f, "tick          = %d\n\n", g_bhop.tick);
 
-        fprintf(f, "cmd           = %p\n", (void*)g_bhop.cmd);
-        fprintf(f, "wrapper       = %p\n", (void*)g_bhop.wrapper);
-        fprintf(f, "pawn          = %p\n\n", (void*)g_bhop.pawn);
+        fprintf(f, "cmd           = 0x%llX\n", (unsigned long long)g_bhop.cmd);
+        fprintf(f, "wrapper       = 0x%llX\n", (unsigned long long)g_bhop.wrapper);
+        fprintf(f, "pawn          = 0x%llX\n\n", (unsigned long long)g_bhop.pawn);
 
         fprintf(f, "hp            = %d\n", g_bhop.hp);
         fprintf(f, "team          = %d\n", g_bhop.team);
@@ -50,7 +50,6 @@ namespace Debug {
         fprintf(f, "LOCAL ORIGIN  = %.1f, %.1f, %.1f\n", g_esp.local_x, g_esp.local_y, g_esp.local_z);
         fprintf(f, "TARGET ORIGIN = %.1f, %.1f, %.1f\n\n", g_esp.target_x, g_esp.target_y, g_esp.target_z);
 
-        // ✅ NUEVO: Bloque del Aimbot
         fprintf(f, "\nAIMBOT\n");
         fprintf(f, "active        = %d\n", g_aim.active);
         fprintf(f, "target_idx    = %d\n", g_aim.target_idx);
@@ -71,7 +70,7 @@ namespace Debug {
 
         fprintf(f, "\nTHIRD PERSON\n");
         fprintf(f, "menu_on       = %d\n", g_tp.menu_on);
-        fprintf(f, "input         = %p\n", (void*)g_tp.input);
+        fprintf(f, "input         = 0x%llX\n", (unsigned long long)g_tp.input);
         fprintf(f, "ticks         = %d\n", g_tp.ticks);
         fprintf(f, "flag 0x250    = %d\n", g_tp.v250);
         fprintf(f, "flag 0x228    = %d\n", g_tp.v228);

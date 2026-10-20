@@ -6,6 +6,8 @@
 #include "present.h"
 #include "createmove.h"
 #include "chams.h"
+#include "aimbot.h"
+#include "triggerbot.h"
 #include "debug.h"
 #include <Windows.h>
 #include <MinHook.h>
@@ -14,9 +16,6 @@
 
 namespace Hooks {
 
-    static constexpr uintptr_t kCreateMoveRVA = 0xB65A70;
-    static constexpr uintptr_t kForceAttackRVA = 0x2233ED0;
-    static constexpr uintptr_t kUserCmdOffset = 0x5540;
     static constexpr uintptr_t kOverrideViewRVA = 0xD02E30;
 
     struct Vec3 { float x, y, z; };
@@ -27,23 +26,10 @@ namespace Hooks {
         Vec3 angView;
     };
 
-    using CreateMoveFn = void(__fastcall*)(void*, int, char);
-    using OverrideViewFn = void(__fastcall*)(__int64, CViewSetup*);
+    using OverrideViewFn = void(__fastcall*)(__int64 a1, CViewSetup* pSetup);
 
-    static CreateMoveFn   o_CreateMove = nullptr;
     static OverrideViewFn o_OverrideView = nullptr;
     static uintptr_t g_client = 0;
-
-    static void __fastcall hk_CreateMove(void* pInput, int slot, char active) {
-        Debug::g_tp.menu_on = g_cfg.visuals.player.third_person ? 1 : 0;
-        if (pInput) {
-            void* pCmd = *reinterpret_cast<void**>((uintptr_t)pInput + kUserCmdOffset);
-            if (pCmd) CreateMove::Apply(pCmd);
-            if (g_cfg.visuals.player.third_person && (GetAsyncKeyState(VK_LBUTTON) & 0x8000))
-                *(int*)(g_client + kForceAttackRVA) = 65537;
-        }
-        if (o_CreateMove) o_CreateMove(pInput, slot, active);
-    }
 
     static void __fastcall hk_OverrideView(__int64 a1, CViewSetup* pSetup) {
         Debug::g_tp.ticks++;
@@ -53,15 +39,17 @@ namespace Hooks {
         float dist = g_cfg.visuals.player.third_person_dist;
         if (dist < 10.f || dist > 500.f) dist = 100.f;
 
+        Vec3 forward;
         float rx = pSetup->angView.x * 0.01745329251f;
         float ry = pSetup->angView.y * 0.01745329251f;
-        float fx = cosf(rx) * cosf(ry);
-        float fy = cosf(rx) * sinf(ry);
-        float fz = -sinf(rx);
+        forward.x = cos(rx) * cos(ry);
+        forward.y = cos(rx) * sin(ry);
+        forward.z = -sin(rx);
 
-        pSetup->vecOrigin.x -= fx * dist;
-        pSetup->vecOrigin.y -= fy * dist;
-        pSetup->vecOrigin.z -= fz * dist;
+        Vec3 eyePos = pSetup->vecOrigin;
+        pSetup->vecOrigin.x = eyePos.x - (forward.x * dist);
+        pSetup->vecOrigin.y = eyePos.y - (forward.y * dist);
+        pSetup->vecOrigin.z = eyePos.z - (forward.z * dist);
     }
 
     bool Init() {
@@ -70,20 +58,30 @@ namespace Hooks {
         if (!g_client) return false;
         if (!Present::Init()) return false;
 
-        uintptr_t cm = g_client + kCreateMoveRVA;
-        if (MH_CreateHook((LPVOID)cm, &hk_CreateMove, (LPVOID*)&o_CreateMove) == MH_OK)
-            MH_EnableHook((LPVOID)cm);
-
+        // Hook OverrideView para Third Person
         uintptr_t ov = g_client + kOverrideViewRVA;
-        if (MH_CreateHook((LPVOID)ov, &hk_OverrideView, (LPVOID*)&o_OverrideView) == MH_OK)
+        Debug::g_tp.v250 = *(uint8_t*)ov;
+        Debug::g_tp.v228 = *(uint8_t*)(ov + 1);
+        if (MH_CreateHook((LPVOID)ov, &hk_OverrideView, reinterpret_cast<LPVOID*>(&o_OverrideView)) == MH_OK)
             MH_EnableHook((LPVOID)ov);
 
+        // Iniciar Chams
         Features::Visuals::Chams::Init();
+
+        // ✅ Iniciar Aimbot (Thread independiente, sin hook de CreateMove)
+        Features::Rage::Aimbot::Init();
+        Features::Rage::Triggerbot::Init();
+
         return true;
     }
 
     void Shutdown() {
+        Features::Rage::Triggerbot::Shutdown();
+        Features::Rage::Aimbot::Shutdown();
+
+        // Detener Chams
         Features::Visuals::Chams::Shutdown();
+
         MH_DisableHook(MH_ALL_HOOKS);
         Present::Shutdown();
         MH_Uninitialize();

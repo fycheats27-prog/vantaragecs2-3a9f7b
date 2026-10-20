@@ -9,6 +9,7 @@
 #include "background.h"
 #include "present.h"
 #include "debug.h" 
+#include "aimbot.h"
 #include <shellapi.h>
 #include <imgui.h>
 
@@ -169,29 +170,163 @@ namespace Menu {
     // ═══════════════════════════════════════════════════════════════
 
     static void RageAimbotTab() {
-        Widgets::Section("aimbot");
-        Widgets::Toggle("enabled", &g_cfg.rage.aimbot.enabled);
-        Widgets::Keybind("hold key", &g_cfg.rage.aimbot.key);
-        Widgets::Toggle("silent aim", &g_cfg.rage.aimbot.silent);
-        Widgets::Toggle("auto fire", &g_cfg.rage.aimbot.auto_fire);
+        auto& a = g_cfg.rage.aimbot;
 
-        Widgets::Section("auxiliary");
-        Widgets::Toggle("auto scope", &g_cfg.rage.aimbot.auto_scope);
-        const char* stops[] = { "off", "slow", "full" };
-        Widgets::Combo("auto stop", &g_cfg.rage.aimbot.auto_stop, stops, IM_ARRAYSIZE(stops));
+        // ─────────────────────────────────────────────
+        //  GLOBAL
+        // ─────────────────────────────────────────────
+        Widgets::Section("global");
+        Widgets::Toggle("enabled", &a.enabled);
+        Widgets::Keybind("hold key", &a.key);
+        Widgets::Toggle("toggle mode", &a.toggle_mode);
+        Widgets::Toggle("silent aim", &a.silent);
+        Widgets::Toggle("target team", &a.target_team);
+        Widgets::Toggle("show fov", &a.show_fov);
+
+        // ─────────────────────────────────────────────
+        //  SELECTOR DE ARMA
+        // ─────────────────────────────────────────────
+        Widgets::Section("weapon category");
+
+        const char* weapon_names[] = {
+            "Pistol", "Rifle", "Sniper", "SMG", "Shotgun", "Machine Gun", "Other"
+        };
+        static int s_weapon_idx = 1;
+
+        float pill_w = 72.0f;
+        for (int i = 0; i < IM_ARRAYSIZE(weapon_names); ++i) {
+            if (i > 0) ImGui::SameLine(0, 6);
+            if (Widgets::ButtonPill(weapon_names[i], s_weapon_idx == i, ImVec2(pill_w, 24))) {
+                s_weapon_idx = i;
+            }
+        }
+        ImGui::Spacing();
+
+        auto& w = a.weapons[s_weapon_idx];
+
+        // ─────────────────────────────────────────────
+        //  AJUSTES DEL ARMA
+        // ─────────────────────────────────────────────
+        Widgets::Section("targeting");
+        Widgets::SliderInt("fov", &w.fov, 0, 180, "%d deg");
+        Widgets::SliderInt("max targets", &w.max_targets, 1, 12, "%d");
 
         Widgets::Section("hitboxes");
         float cw = 100.0f;
-        Widgets::MultiToggle("head", &g_cfg.rage.aimbot.hit_head, cw); ImGui::SameLine(0, 6);
-        Widgets::MultiToggle("neck", &g_cfg.rage.aimbot.hit_neck, cw); ImGui::SameLine(0, 6);
-        Widgets::MultiToggle("chest", &g_cfg.rage.aimbot.hit_chest, cw);
-        Widgets::MultiToggle("stomach", &g_cfg.rage.aimbot.hit_stomach, cw); ImGui::SameLine(0, 6);
-        Widgets::MultiToggle("pelvis", &g_cfg.rage.aimbot.hit_pelvis, cw); ImGui::SameLine(0, 6);
-        Widgets::MultiToggle("legs", &g_cfg.rage.aimbot.hit_legs, cw);
+        Widgets::MultiToggle("head", &w.hit_head, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("neck", &w.hit_neck, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("chest", &w.hit_chest, cw);
+        Widgets::MultiToggle("stomach", &w.hit_stomach, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("pelvis", &w.hit_pelvis, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("legs", &w.hit_legs, cw);
 
-        Widgets::Section("targeting");
-        Widgets::SliderInt("fov", &g_cfg.rage.aimbot.fov, 0, 180, "%d deg");
-        Widgets::SliderInt("max targets", &g_cfg.rage.aimbot.max_targets, 1, 8, "%d");
+        Widgets::Section("aim tuning");
+        Widgets::Toggle("prediction", &w.prediction);
+        if (w.prediction) {
+            Widgets::SliderFloat("prediction scale", &w.prediction_scale, 0.0f, 2.0f, "%.2fx");
+        }
+        Widgets::SliderFloat("smooth", &w.smooth, 0.0f, 1.0f, "%.2f");
+        Widgets::SliderInt("reaction (ms)", &w.reaction_ms, 0, 250, "%d ms");
+
+        ImGui::Spacing();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.42f, 0.47f, 0.54f, 1.0f));
+        ImGui::Text("editing: %s", weapon_names[s_weapon_idx]);
+        ImGui::PopStyleColor();
+    }
+
+    static void RageTriggerTab() {
+        auto& t = g_cfg.rage.trigger;
+
+        // ─────────────────────────────────────────────
+        //  CURRENT WEAPON
+        // ─────────────────────────────────────────────
+        Widgets::Section("current weapon");
+        const char* wn = Features::Rage::Aimbot::GetCurrentWeaponName();
+        const char* cat = Features::Rage::Aimbot::GetCurrentCategoryName();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.96f, 0.98f, 1.0f));
+        ImGui::Text("%s", wn);
+        ImGui::PopStyleColor();
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.55f, 0.60f, 0.66f, 1.0f));
+        ImGui::Text("[%s]", cat);
+        ImGui::PopStyleColor();
+
+        // ─────────────────────────────────────────────
+        //  GLOBAL
+        // ─────────────────────────────────────────────
+        Widgets::Section("global");
+        Widgets::Toggle("enabled", &t.enabled);
+        Widgets::Keybind("hold key", &t.key);
+        Widgets::Toggle("toggle mode", &t.toggle_mode);
+        Widgets::Toggle("target team", &t.target_team);
+
+        // ─────────────────────────────────────────────
+        //  WEAPON SELECTOR (auto + manual)
+        // ─────────────────────────────────────────────
+        Widgets::Section("weapon category");
+        const char* names[] = { "Pistol", "Rifle", "Sniper", "SMG", "Shotgun", "Machine Gun", "Other" };
+        constexpr int kCount = IM_ARRAYSIZE(names);
+
+        static int      s_idx = 1;
+        static int      s_auto_cat = -1;
+        static uint64_t s_manual_time = 0;
+
+        int detected = 0;
+        for (int i = 0; i < kCount; ++i)
+            if (strcmp(cat, names[i]) == 0 || (i == 0 && strstr(cat, "pistol")) ||
+                (i == 1 && strstr(cat, "rifle")) || (i == 2 && strstr(cat, "sniper")) ||
+                (i == 3 && strstr(cat, "smg")) || (i == 4 && strstr(cat, "shotgun")) ||
+                (i == 5 && strstr(cat, "mg")) || (i == 6 && strstr(cat, "other")))
+            {
+                detected = i; break;
+            }
+
+        uint64_t now = GetTickCount64();
+        bool user_override = (now - s_manual_time) < 2000;
+
+        if (!user_override && detected != s_auto_cat) {
+            s_idx = detected;
+            s_auto_cat = detected;
+        }
+
+        float pill_w = 72.0f;
+        for (int i = 0; i < kCount; ++i) {
+            if (i > 0) ImGui::SameLine(0, 6);
+            if (Widgets::ButtonPill(names[i], s_idx == i, ImVec2(pill_w, 24))) {
+                s_idx = i;
+                s_manual_time = now;
+                s_auto_cat = i;
+            }
+        }
+        ImGui::Spacing();
+
+        auto& w = t.weapons[s_idx];
+
+        // ─────────────────────────────────────────────
+        //  TRIGGER
+        // ─────────────────────────────────────────────
+        Widgets::Section("trigger");
+        Widgets::Toggle("enabled (this weapon)", &w.enabled);
+        Widgets::SliderFloat("fov", &w.fov, 0.1f, 10.0f, "%.1f deg");
+        Widgets::SliderInt("delay", &w.delay_ms, 0, 300, "%d ms");
+        Widgets::Toggle("prediction", &w.prediction);
+
+        // ─────────────────────────────────────────────
+        //  HITBOXES
+        // ─────────────────────────────────────────────
+        Widgets::Section("hitboxes");
+        float cw = 100.0f;
+        Widgets::MultiToggle("head", &w.hit_head, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("neck", &w.hit_neck, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("chest", &w.hit_chest, cw);
+        Widgets::MultiToggle("stomach", &w.hit_stomach, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("pelvis", &w.hit_pelvis, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("legs", &w.hit_legs, cw);
+
+        ImGui::Spacing();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.42f, 0.47f, 0.54f, 1.0f));
+        ImGui::Text("editing: %s", names[s_idx]);
+        ImGui::PopStyleColor();
     }
 
     static void RageAccuracyTab() {
@@ -229,12 +364,13 @@ namespace Menu {
     }
 
     static void RageTab() {
-        const char* subtabs[] = { "aimbot", "accuracy", "exploits" };
+        const char* subtabs[] = { "aimbot", "triggerbot", "accuracy", "exploits" };
         SubTabs(subtabs, IM_ARRAYSIZE(subtabs), &g_rage_subtab);
         switch (g_rage_subtab) {
         case 0: RageAimbotTab();   break;
-        case 1: RageAccuracyTab(); break;
-        case 2: RageExploitsTab(); break;
+        case 1: RageTriggerTab();  break;
+        case 2: RageAccuracyTab(); break;
+        case 3: RageExploitsTab(); break;
         }
     }
 

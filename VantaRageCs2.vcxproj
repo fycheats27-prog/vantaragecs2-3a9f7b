@@ -134,6 +134,7 @@
     <ClInclude Include="src\menu.h" />
     <ClInclude Include="src\present.h" />
     <ClInclude Include="src\style.h" />
+    <ClInclude Include="src\triggerbot.h" />
     <ClInclude Include="src\widgets.h" />
     <ClInclude Include="vendor\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="vendor\imgui\backends\imgui_impl_win32.h" />
@@ -161,6 +162,7 @@
     <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\present.cpp" />
     <ClCompile Include="src\style.cpp" />
+    <ClCompile Include="src\triggerbot.cpp" />
     <ClCompile Include="src\widgets.cpp" />
     <ClCompile Include="vendor\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="vendor\imgui\backends\imgui_impl_win32.cpp" />

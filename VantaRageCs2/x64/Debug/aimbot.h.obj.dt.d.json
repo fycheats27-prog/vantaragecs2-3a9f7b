@@ -3,7 +3,9 @@
     "Data": {
         "Source": "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\aimbot.h",
         "ProvidedModule": "",
-        "Includes": [],
+        "Includes": [
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\config.h"
+        ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
     }
