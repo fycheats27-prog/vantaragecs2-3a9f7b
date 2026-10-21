@@ -132,6 +132,7 @@
     <ClInclude Include="src\esp.h" />
     <ClInclude Include="src\hooks.h" />
     <ClInclude Include="src\menu.h" />
+    <ClInclude Include="src\misc.h" />
     <ClInclude Include="src\present.h" />
     <ClInclude Include="src\style.h" />
     <ClInclude Include="src\triggerbot.h" />
@@ -160,6 +161,7 @@
     <ClCompile Include="src\hooks.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
+    <ClCompile Include="src\misc.cpp" />
     <ClCompile Include="src\present.cpp" />
     <ClCompile Include="src\style.cpp" />
     <ClCompile Include="src\triggerbot.cpp" />

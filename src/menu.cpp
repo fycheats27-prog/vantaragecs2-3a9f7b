@@ -452,8 +452,8 @@ namespace Menu {
 
         if (p.chams) {
             ImGui::TextColored(ImVec4(0.5f, 0.75f, 1.0f, 1.0f), "chams (D3D11)");
-            ImGui::Text("draws/frame:   %d", Debug::g_chams.write_count);
-            ImGui::Text("painted/frame: %d", Debug::g_chams.good_players);
+            ImGui::Text("draws/frame:   %d", Debug::g_chams.draws);
+            ImGui::Text("painted/frame: %d", Debug::g_chams.painted);
 
             static bool through_walls = Features::Visuals::Chams::GetThroughWalls();
             if (Widgets::Toggle("through walls", &through_walls))
@@ -564,9 +564,9 @@ namespace Menu {
 
     static void MiscMovementTab() {
         Widgets::Section("movement");
-        Widgets::Toggle("bunny hop", &g_cfg.misc.movement.bhop);
-        Widgets::Toggle("auto strafe", &g_cfg.misc.movement.auto_strafe);
+        Widgets::Toggle("bhop", &g_cfg.misc.movement.bhop);
         Widgets::Toggle("fast stop", &g_cfg.misc.movement.fast_stop);
+        Widgets::Toggle("counter strafe", &g_cfg.misc.movement.counter_strafe);
     }
 
     static void MiscWorldTab() {
@@ -612,43 +612,49 @@ namespace Menu {
     // language: C++, file: src/menu.cpp
 
     static void DebugTab() {
-        auto& b = Debug::g_bhop;
+        auto& m = Debug::g_movement;
         auto& e = Debug::g_esp;
+        auto& c = Debug::g_chams;
+        auto& mi = Debug::g_misc;
+        auto& tp = Debug::g_tp;
 
-        Widgets::Section("hook");
-        ImGui::Text("alive:        %s", b.hook_alive ? "yes" : "no");
-        ImGui::Text("bhop enabled: %s", b.bhop_enabled ? "yes" : "no");
-        ImGui::Text("tick:         %d", b.tick);
+        Widgets::Section("movement / createmove");
+        ImGui::Text("hook alive:    %s", m.hook_alive ? "yes" : "no");
+        ImGui::Text("hook addr:     %p", (void*)m.hook_addr);
+        ImGui::Text("calls:         %d", m.calls);
+        ImGui::Text("on_ground:     %s", m.on_ground ? "yes" : "no");
+        ImGui::Text("jump_held:     %s", m.jump_held ? "yes" : "no");
+        ImGui::Text("bhop_active:   %d", m.bhop_active);
+        ImGui::Text("fast_active:   %d", m.fast_active);
+        ImGui::Text("counter_active:%d", m.counter_active);
 
-        Widgets::Section("pointers");
-        ImGui::Text("cmd:      %p", (void*)b.cmd);
-        ImGui::Text("wrapper:  %p", (void*)b.wrapper);
-        ImGui::Text("pawn:     %p", (void*)b.pawn);
+        Widgets::Section("chams");
+        ImGui::Text("enabled:       %s", c.enabled ? "yes" : "no");
+        ImGui::Text("init_done:     %s", c.init_done ? "yes" : "no");
+        ImGui::Text("draws/frame:   %d", c.draws);
+        ImGui::Text("painted/frame: %d", c.painted);
+        ImGui::Text("stride:        0x%X", c.stride);
+        ImGui::Text("mode:          %d", c.mode);
 
-        Widgets::Section("local player");
-        ImGui::Text("hp:        %d", b.hp);
-        ImGui::Text("team:      %d", b.team);
-        ImGui::Text("life:      %d", b.life);
-        ImGui::Text("flags:     0x%08X", b.flags);
-        ImGui::Text("on_ground: %s", b.on_ground ? "yes" : "no");
-        ImGui::Text("jump_held: %s", b.jump_held ? "yes" : "no");
+        Widgets::Section("misc");
+        ImGui::Text("no_flash:      %d", mi.no_flash);
+        ImGui::Text("no_smoke:      %d", mi.no_smoke);
+        ImGui::Text("reveal_ranks:  %d", mi.reveal_ranks);
+        ImGui::Text("clantag:       %d", mi.clantag);
+        ImGui::Text("chat_spam:     %d", mi.chat_spam);
 
-        // ── NUEVO: ESP DEBUG ──
         Widgets::Section("esp");
-        ImGui::Text("entities found:    %d", e.entities_found);
+        ImGui::Text("entities found:     %d", e.entities_found);
         ImGui::Text("entities on screen: %d", e.entities_on_screen);
-        ImGui::Text("local origin:  %.1f, %.1f, %.1f", e.local_x, e.local_y, e.local_z);
-        ImGui::Text("target origin: %.1f, %.1f, %.1f", e.target_x, e.target_y, e.target_z);
+        ImGui::Text("local origin:   %.1f, %.1f, %.1f", e.local_x, e.local_y, e.local_z);
+        ImGui::Text("target origin:  %.1f, %.1f, %.1f", e.target_x, e.target_y, e.target_z);
 
-        Widgets::Section("wrapper memory");
-        ImGui::Text("[00] %016llX", b.wrapper_00);
-        ImGui::Text("[08] %016llX", b.wrapper_08);
-        ImGui::Text("[10] %016llX", b.wrapper_10);
-        ImGui::Text("[18] %016llX", b.wrapper_18);
-        ImGui::Text("[20] %016llX", b.wrapper_20);
-        ImGui::Text("[28] %016llX", b.wrapper_28);
-        ImGui::Text("[30] %016llX", b.wrapper_30);
-        ImGui::Text("[38] %016llX", b.wrapper_38);
+        Widgets::Section("third person");
+        ImGui::Text("ticks:         %d", tp.ticks);
+        ImGui::Text("v250:          %d", tp.v250);
+        ImGui::Text("v228:          %d", tp.v228);
+        ImGui::Text("v229:          %d", tp.v229);
+        ImGui::Text("v251:          %d", tp.v251);
 
         ImGui::Spacing();
         if (Widgets::Button("open log folder", ImVec2(-1, 32))) {
@@ -657,7 +663,7 @@ namespace Menu {
                 ShellExecuteA(nullptr, "open", path, nullptr, nullptr, SW_SHOWNORMAL);
             }
         }
-        ImGui::TextDisabled("log: %TEMP%\\vanta_bhop.log");
+        ImGui::TextDisabled("log: %%TEMP%%\\vanta.log");
     }
 
     // ═══════════════════════════════════════════════════════════════

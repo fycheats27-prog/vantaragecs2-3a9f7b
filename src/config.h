@@ -1,5 +1,6 @@
 // --- config.h ---
 #pragma once
+#include <Windows.h>
 
 // ──────────────── RAGE ────────────────
 
@@ -216,35 +217,36 @@ struct VisualsConfig_t {
 
 // ──────────────── MISC ────────────────
 struct MiscMovement_t {
-    bool  bhop = false;
-    bool  auto_strafe = false;
-    bool  fast_stop = false;
+    bool bhop = false;
+    bool auto_strafe = false;
+    bool fast_stop = false;
+    bool counter_strafe = false;   // <-- NUEVO
 };
 
 struct MiscWorld_t {
-    bool  no_flash = false;
-    bool  no_smoke = false;
-    bool  reveal_ranks = false;
+    bool no_flash = false;
+    bool no_smoke = false;
+    bool reveal_ranks = false;
 };
 
 struct MiscExploits_t {
-    bool  anti_untrusted = false;
-    bool  clantag = false;
-    char  clantag_text[32] = "vanta";
-    bool  chat_spam = false;
-    char  chat_text[128] = "";
+    bool anti_untrusted = false;
+    bool clantag = false;
+    bool chat_spam = false;
+    char clantag_text[16] = "vanta";
+    char chat_text[128] = "vanta on top";
 };
 
 struct MiscInput_t {
-    int   menu_key = 0x2D;
-    int   unload_key = 0x23;
+    int menu_key = VK_INSERT;
+    int unload_key = VK_END;
 };
 
-struct MiscConfig_t {
+struct Misc_t {
     MiscMovement_t movement;
-    MiscWorld_t    world;
+    MiscWorld_t world;
     MiscExploits_t exploits;
-    MiscInput_t    input;
+    MiscInput_t input;
 };
 
 // ──────────────── UI ────────────────
@@ -262,7 +264,7 @@ struct Config_t {
     RageConfig_t    rage;
     AntiAimConfig_t anti_aim;
     VisualsConfig_t visuals;
-    MiscConfig_t    misc;
+    Misc_t          misc; // <-- CORREGIDO AQUÍ: era MiscConfig_t
     UIConfig_t      ui;
 };
 

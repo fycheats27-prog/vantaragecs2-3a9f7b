@@ -1,4 +1,4 @@
-// chams.cpp — añade filtro 254 (ignorar cuerpo) para el preset weapons+gloves.
+// chams.cpp — filtro 254 (ignorar cuerpo), OnPresent para debug de draws/frame.
 #include "chams.h"
 #include "config.h"
 #include "debug.h"
@@ -33,8 +33,8 @@ namespace Features::Visuals::Chams {
     static ID3D11PixelShader* g_ps_occ_active = nullptr;
     static ID3D11DepthStencilState* g_dss_occluded = nullptr;
 
-    static DrawIndexedFn     g_orig_idx = nullptr;
-    static DrawIndexedInstFn g_orig_idx_i = nullptr;
+    static DrawIndexedFn              g_orig_idx = nullptr;
+    static DrawIndexedInstFn          g_orig_idx_i = nullptr;
     static void* g_idx_addr = nullptr;
     static void* g_idx_i_addr = nullptr;
 
@@ -48,7 +48,7 @@ namespace Features::Visuals::Chams {
     static volatile long g_index_max = 300000;
     static volatile long g_inst_min = 1;
     static volatile long g_inst_max = 1;
-    static volatile long g_stride_filter = 254;  // 254 = todo menos cuerpo (32)
+    static volatile long g_stride_filter = 254;   // 254 = todo menos cuerpo (32)
     static volatile long g_ib_min = 2048;
     static volatile long g_ib_max = 0;
     static volatile long g_through_walls = 1;
@@ -102,10 +102,10 @@ namespace Features::Visuals::Chams {
 
         UINT filter = (UINT)InterlockedCompareExchange(&g_stride_filter, 0, 0);
         if (filter != 0) {
-            if (filter == 255) { // 255: body + weapons (28||32)
+            if (filter == 255) {          // 255: body + weapons (28 || 32)
                 if (stride != 28 && stride != 32) return false;
             }
-            else if (filter == 254) { // 254: everything EXCEPT body
+            else if (filter == 254) {     // 254: todo EXCEPTO cuerpo (32)
                 if (stride == 32) return false;
             }
             else {
@@ -148,7 +148,7 @@ namespace Features::Visuals::Chams {
 
         ctx->PSSetShader(prev_ps, nullptr, 0);
         ctx->OMSetDepthStencilState(prev_dss, prev_ref);
-        if (prev_ps) prev_ps->Release();
+        if (prev_ps)  prev_ps->Release();
         if (prev_dss) prev_dss->Release();
     }
 
@@ -218,8 +218,6 @@ namespace Features::Visuals::Chams {
         if (st1 != MH_OK && st2 != MH_OK) return false;
 
         Debug::g_chams.init_done = 1;
-        Debug::g_chams.enabled = 1;
-        Debug::g_chams.material_ok = 1;
         return true;
     }
 
@@ -231,13 +229,19 @@ namespace Features::Visuals::Chams {
             if (g_ps_occ[i]) { g_ps_occ[i]->Release(); g_ps_occ[i] = nullptr; }
         }
         if (g_dss_occluded) { g_dss_occluded->Release(); g_dss_occluded = nullptr; }
+        Debug::g_chams.init_done = 0;
     }
 
-    void OnPresent(ID3D11DeviceContext*) {
-        Debug::g_chams.good_players = (int)(InterlockedExchange(&g_painted_idx, 0)
+    // ── Present hook — llamado desde present.cpp al inicio de cada frame ──
+    // Vuelca contadores del frame anterior a Debug::g_chams y los resetea.
+    void OnPresent(ID3D11DeviceContext* context) {
+        (void)context;
+        Debug::g_chams.enabled = g_enabled ? 1 : 0;
+        Debug::g_chams.draws = (int)InterlockedExchange(&g_draws_frame, 0);
+        Debug::g_chams.painted = (int)(InterlockedExchange(&g_painted_idx, 0)
             + InterlockedExchange(&g_painted_idx_i, 0));
-        Debug::g_chams.write_count = (int)InterlockedExchange(&g_draws_frame, 0);
-        Debug::g_chams.good_fires = (int)g_draws_total;
+        Debug::g_chams.stride = (int)InterlockedCompareExchange(&g_stride_filter, 0, 0);
+        Debug::g_chams.mode = g_mode;
     }
 
     void SetEnabled(bool on) { g_enabled = on; }
@@ -279,4 +283,5 @@ namespace Features::Visuals::Chams {
 
     void SetIBMax(unsigned bytes) { InterlockedExchange(&g_ib_max, (long)bytes); }
     unsigned GetIBMax() { return (unsigned)InterlockedCompareExchange(&g_ib_max, 0, 0); }
-}
+
+} // namespace Features::Visuals::Chams

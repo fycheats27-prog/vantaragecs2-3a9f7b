@@ -1,7 +1,3 @@
-// language: C++, file: src/present.cpp
-// *Present hook (DXGI vtable idx 8) + WndProc + ImGui lifecycle.*
-// *ESP, FOV circle, Chams D3D11, y flush de teclas al cerrar menú.*
-
 #include <MinHook.h>
 #include "present.h"
 #include "style.h"
@@ -9,6 +5,7 @@
 #include "esp.h"
 #include "aimbot.h"
 #include "chams.h"
+#include "misc.h"
 #include "config.h"
 #include <vector>
 #include <atomic>
@@ -69,8 +66,9 @@ namespace Present {
         if (g_unload_requested.load(std::memory_order_acquire))
             return CallWindowProcW(g_original_wndproc, hwnd, msg, wparam, lparam);
 
-        if (msg == WM_KEYDOWN && wparam == VK_INSERT) {
-            if (lparam & 0x40000000) return TRUE;
+        // Toggle menú dinámico (Menu Key)
+        if (msg == WM_KEYDOWN && wparam == (WPARAM)g_cfg.misc.input.menu_key) {
+            if (lparam & 0x40000000) return TRUE; // Ignorar autorepeat
 
             g_menu_open = !g_menu_open;
             if (g_menu_open) {
@@ -85,25 +83,24 @@ namespace Present {
             return TRUE;
         }
 
-        if (msg == WM_KEYDOWN && wparam == VK_END) {
+        // Unload dinámico (Unload Key)
+        if (msg == WM_KEYDOWN && wparam == (WPARAM)g_cfg.misc.input.unload_key) {
             RequestUnload();
             return TRUE;
         }
 
+        // --- Menú abierto: ImGui captura solo lo que pide ---
         if (g_menu_open) {
             ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
-
             ImGuiIO& io = ImGui::GetIO();
             bool is_mouse = (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST);
             bool is_key = (msg >= WM_KEYFIRST && msg <= WM_KEYLAST);
             bool is_char = (msg == WM_CHAR);
-
             if ((is_mouse && io.WantCaptureMouse) ||
                 (is_key && io.WantCaptureKeyboard) ||
                 (is_char && io.WantCaptureKeyboard)) {
                 return TRUE;
             }
-
             return CallWindowProcW(g_original_wndproc, hwnd, msg, wparam, lparam);
         }
 
@@ -121,9 +118,7 @@ namespace Present {
                 return g_original_present(swapchain, sync, flags);
 
             g_device->GetImmediateContext(&g_context);
-
-            DXGI_SWAP_CHAIN_DESC desc;
-            swapchain->GetDesc(&desc);
+            DXGI_SWAP_CHAIN_DESC desc; swapchain->GetDesc(&desc);
             g_hwnd = desc.OutputWindow;
 
             g_original_wndproc = reinterpret_cast<WNDPROC>(
@@ -133,19 +128,15 @@ namespace Present {
             ImGui::CreateContext();
             ImGuiIO& io = ImGui::GetIO();
             io.IniFilename = nullptr;
-
             Style::Apply();
-
             ImGui_ImplWin32_Init(g_hwnd);
             ImGui_ImplDX11_Init(g_device, g_context);
 
             Features::Visuals::Chams::Init(g_device, g_context);
-
             g_initialized = true;
         }
 
         RenderFrame();
-
         return g_original_present(swapchain, sync, flags);
     }
 
@@ -154,13 +145,13 @@ namespace Present {
         if (g_unload_requested.load(std::memory_order_acquire)) return;
 
         Features::Visuals::Chams::OnPresent(g_context);
+        Features::Misc::Apply();
 
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        if (g_menu_open)
-            Menu::Draw();
+        if (g_menu_open) Menu::Draw();
 
         Features::Visuals::ESP::Render();
         DrawFovCircle();
@@ -230,7 +221,6 @@ namespace Present {
         swapchain->Release();
         DestroyWindow(dummy);
         UnregisterClassW(wc.lpszClassName, wc.hInstance);
-
         return ok;
     }
 

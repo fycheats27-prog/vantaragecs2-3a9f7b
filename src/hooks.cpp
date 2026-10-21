@@ -1,10 +1,11 @@
-// --- hooks.cpp ---
 #include "hooks.h"
 #include "config.h"
 #include "sdk.h"
 #include "memory.h"
 #include "present.h"
 #include "createmove.h"
+#include "bhop.h"
+#include "misc.h"
 #include "chams.h"
 #include "aimbot.h"
 #include "triggerbot.h"
@@ -58,14 +59,17 @@ namespace Hooks {
         if (!g_client) return false;
         if (!Present::Init()) return false;
 
-        // Hook OverrideView para Third Person
+        // Hook OverrideView (Third Person)
         uintptr_t ov = g_client + kOverrideViewRVA;
-        Debug::g_tp.v250 = *(uint8_t*)ov;   
+        Debug::g_tp.v250 = *(uint8_t*)ov;
         Debug::g_tp.v228 = *(uint8_t*)(ov + 1);
         if (MH_CreateHook((LPVOID)ov, &hk_OverrideView, reinterpret_cast<LPVOID*>(&o_OverrideView)) == MH_OK)
             MH_EnableHook((LPVOID)ov);
 
-        // ✅ Iniciar Aimbot (Thread independiente, sin hook de CreateMove)
+        // Hook CreateMove (Bhop, Fast-Stop, Counter-Strafe)
+        Hooks::CreateMove::Init();
+
+        // Iniciar Aimbot y Triggerbot
         Features::Rage::Aimbot::Init();
         Features::Rage::Triggerbot::Init();
 
@@ -75,10 +79,7 @@ namespace Hooks {
     void Shutdown() {
         Features::Rage::Triggerbot::Shutdown();
         Features::Rage::Aimbot::Shutdown();
-
-        // Detener Chams
-        Features::Visuals::Chams::Shutdown();
-
+        Hooks::CreateMove::Shutdown();
         MH_DisableHook(MH_ALL_HOOKS);
         Present::Shutdown();
         MH_Uninitialize();

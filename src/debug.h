@@ -4,18 +4,16 @@
 
 namespace Debug {
 
-    struct BhopState {
-        int  hook_alive = 0;
-        int  bhop_enabled = 0;
-        int  tick = 0;
-        uintptr_t cmd = 0;
-        uintptr_t wrapper = 0;
-        uintptr_t pawn = 0;
-        int  hp = 0, team = 0, life = 0;
-        uint32_t flags = 0;
-        bool on_ground = false, jump_held = false;
-        uint64_t wrapper_00 = 0, wrapper_08 = 0, wrapper_10 = 0, wrapper_18 = 0;
-        uint64_t wrapper_20 = 0, wrapper_28 = 0, wrapper_30 = 0, wrapper_38 = 0;
+    struct MovementState {
+        int       hook_alive = 0;   // 1 si CreateMove fue hookeado
+        uintptr_t hook_addr = 0;   // dirección real de CreateMove
+        int       calls = 0;   // veces que disparó el hook
+
+        int       on_ground = 0;   // FL_ONGROUND
+        int       jump_held = 0;   // espacio presionado
+        int       bhop_active = 0;   // forzó IN_JUMP este tick
+        int       fast_active = 0;   // zeroeó velocity
+        int       counter_active = 0; // invirtió vector
     };
 
     struct ThirdPersonState {
@@ -44,32 +42,29 @@ namespace Debug {
         int  bone = 0;
     };
 
-    // ---- CHAMS shotgun de vtable ----
     struct ChamsState {
         int       enabled = 1;
         int       init_done = 0;
-        uintptr_t scenesys = 0;
-
-        int       total_hooks = 0;
-        int       good_idx = -1;
-        uintptr_t good_rva = 0;    // slot number del hook bueno
-        int       good_fires = 0;
-        int       good_players = 0;
-        int       stride_used = 0;
-        int       write_count = 0;
-        int       read_only = 0;
-
-        int       material_ok = 0;
-        uintptr_t material_ptr = 0;
-
-        int       hook_fires[40] = { 0 };
+        int       draws = 0;   // draws procesados este frame
+        int       painted = 0;   // draws pintados este frame
+        int       stride = 0;   // stride activo
+        int       mode = 0;   // 0=mag, 1=red, 2=blue
     };
 
-    extern BhopState        g_bhop;
+    struct MiscState {
+        int no_flash = 0;
+        int no_smoke = 0;
+        int reveal_ranks = 0;
+        int clantag = 0;
+        int chat_spam = 0;
+    };
+
+    extern MovementState    g_movement;
     extern ThirdPersonState g_tp;
     extern EspState         g_esp;
     extern AimbotState      g_aim;
     extern ChamsState       g_chams;
+    extern MiscState        g_misc;
 
     void Flush();
 }
