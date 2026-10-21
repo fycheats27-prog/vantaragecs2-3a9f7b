@@ -65,9 +65,6 @@ namespace Hooks {
         if (MH_CreateHook((LPVOID)ov, &hk_OverrideView, reinterpret_cast<LPVOID*>(&o_OverrideView)) == MH_OK)
             MH_EnableHook((LPVOID)ov);
 
-        // Iniciar Chams
-        Features::Visuals::Chams::Init();
-
         // ✅ Iniciar Aimbot (Thread independiente, sin hook de CreateMove)
         Features::Rage::Aimbot::Init();
         Features::Rage::Triggerbot::Init();

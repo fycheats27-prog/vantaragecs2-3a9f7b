@@ -1,6 +1,6 @@
-// language: C++, file: src/hooks/present.cpp
+// language: C++, file: src/present.cpp
 // *Present hook (DXGI vtable idx 8) + WndProc + ImGui lifecycle.*
-// *Incluye el renderizado del ESP y el círculo de FOV.*
+// *ESP, FOV circle, Chams D3D11, y flush de teclas al cerrar menú.*
 
 #include <MinHook.h>
 #include "present.h"
@@ -8,7 +8,10 @@
 #include "menu.h"
 #include "esp.h"
 #include "aimbot.h"
+#include "chams.h"
 #include "config.h"
+#include <vector>
+#include <atomic>
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>
@@ -29,6 +32,8 @@ namespace Present {
     bool g_menu_open = false;
     std::atomic<bool> g_unload_requested = false;
 
+    static std::vector<WPARAM> g_keys_held_on_open;
+
     using PresentFn = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT);
     static PresentFn g_original_present = nullptr;
 
@@ -43,41 +48,63 @@ namespace Present {
         dl->AddCircle(ImVec2(cx, cy), radius, IM_COL32(36, 140, 210, 140), 64, 1.5f);
     }
 
+    static void CaptureHeldKeys() {
+        g_keys_held_on_open.clear();
+        for (int vk = 8; vk < 256; ++vk) {
+            if (GetAsyncKeyState(vk) & 0x8000)
+                g_keys_held_on_open.push_back((WPARAM)vk);
+        }
+    }
+
+    static void FlushHeldKeys(HWND hwnd) {
+        for (WPARAM vk : g_keys_held_on_open) {
+            if (!(GetAsyncKeyState((int)vk) & 0x8000)) {
+                CallWindowProcW(g_original_wndproc, hwnd, WM_KEYUP, vk, 0xC0000001);
+            }
+        }
+        g_keys_held_on_open.clear();
+    }
+
     static LRESULT __stdcall WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         if (g_unload_requested.load(std::memory_order_acquire))
             return CallWindowProcW(g_original_wndproc, hwnd, msg, wparam, lparam);
+
+        if (msg == WM_KEYDOWN && wparam == VK_INSERT) {
+            if (lparam & 0x40000000) return TRUE;
+
+            g_menu_open = !g_menu_open;
+            if (g_menu_open) {
+                CaptureHeldKeys();
+                ShowCursor(TRUE);
+                ClipCursor(nullptr);
+            }
+            else {
+                FlushHeldKeys(hwnd);
+                ShowCursor(FALSE);
+            }
+            return TRUE;
+        }
 
         if (msg == WM_KEYDOWN && wparam == VK_END) {
             RequestUnload();
             return TRUE;
         }
 
-        if (msg == WM_KEYDOWN && wparam == VK_INSERT) {
-            g_menu_open = !g_menu_open;
-            if (g_menu_open) {
-                ShowCursor(TRUE);
-                ClipCursor(nullptr);
-            }
-            else {
-                ShowCursor(FALSE);
-            }
-            return TRUE;
-        }
-
         if (g_menu_open) {
             ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
 
-            switch (msg) {
-            case WM_MOUSEMOVE:
-            case WM_LBUTTONDOWN:  case WM_LBUTTONUP:
-            case WM_RBUTTONDOWN:  case WM_RBUTTONUP:
-            case WM_MBUTTONDOWN:  case WM_MBUTTONUP:
-            case WM_XBUTTONDOWN:  case WM_XBUTTONUP:
-            case WM_MOUSEWHEEL:
-            case WM_KEYDOWN:      case WM_KEYUP:
-            case WM_CHAR:
+            ImGuiIO& io = ImGui::GetIO();
+            bool is_mouse = (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST);
+            bool is_key = (msg >= WM_KEYFIRST && msg <= WM_KEYLAST);
+            bool is_char = (msg == WM_CHAR);
+
+            if ((is_mouse && io.WantCaptureMouse) ||
+                (is_key && io.WantCaptureKeyboard) ||
+                (is_char && io.WantCaptureKeyboard)) {
                 return TRUE;
             }
+
+            return CallWindowProcW(g_original_wndproc, hwnd, msg, wparam, lparam);
         }
 
         return CallWindowProcW(g_original_wndproc, hwnd, msg, wparam, lparam);
@@ -112,6 +139,8 @@ namespace Present {
             ImGui_ImplWin32_Init(g_hwnd);
             ImGui_ImplDX11_Init(g_device, g_context);
 
+            Features::Visuals::Chams::Init(g_device, g_context);
+
             g_initialized = true;
         }
 
@@ -123,6 +152,8 @@ namespace Present {
     void RenderFrame() {
         if (!g_initialized) return;
         if (g_unload_requested.load(std::memory_order_acquire)) return;
+
+        Features::Visuals::Chams::OnPresent(g_context);
 
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
@@ -142,7 +173,11 @@ namespace Present {
             ID3D11RenderTargetView* rtv = nullptr;
             if (SUCCEEDED(g_device->CreateRenderTargetView(backbuffer, nullptr, &rtv))) {
                 g_context->OMSetRenderTargets(1, &rtv, nullptr);
+
+                Features::Visuals::Chams::SetInImGuiRender(true);
                 ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+                Features::Visuals::Chams::SetInImGuiRender(false);
+
                 rtv->Release();
             }
             backbuffer->Release();
@@ -201,6 +236,8 @@ namespace Present {
 
     void Shutdown() {
         if (!g_initialized) return;
+
+        Features::Visuals::Chams::Shutdown();
 
         if (g_original_wndproc && g_hwnd) {
             SetWindowLongPtrW(g_hwnd, GWLP_WNDPROC,

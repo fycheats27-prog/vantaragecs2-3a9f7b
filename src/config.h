@@ -137,7 +137,7 @@ struct RageExploits_t {
 
 struct RageConfig_t {
     RageAimbot_t   aimbot;
-    RageTrigger_t  trigger;    // ✅ NUEVO
+    RageTrigger_t  trigger;
     RageAccuracy_t accuracy;
     RageExploits_t exploits;
 };

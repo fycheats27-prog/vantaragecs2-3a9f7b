@@ -7,6 +7,7 @@
 #include "config.h"
 #include "style.h"
 #include "background.h"
+#include "chams.h"
 #include "present.h"
 #include "debug.h" 
 #include "aimbot.h"
@@ -447,12 +448,83 @@ namespace Menu {
 
         Widgets::Section("chams");
         Widgets::Toggle("enabled", &p.chams);
+        Features::Visuals::Chams::SetEnabled(p.chams);
+
         if (p.chams) {
-            const char* mats[] = { "flat", "latex", "glow", "glass" };
-            Widgets::Combo("material", &p.chams_mat, mats, IM_ARRAYSIZE(mats));
-            Widgets::ColorEdit("visible", p.chams_vis);
-            Widgets::ColorEdit("occluded", p.chams_occ);
-            Widgets::Toggle("team chams", &p.chams_team);
+            ImGui::TextColored(ImVec4(0.5f, 0.75f, 1.0f, 1.0f), "chams (D3D11)");
+            ImGui::Text("draws/frame:   %d", Debug::g_chams.write_count);
+            ImGui::Text("painted/frame: %d", Debug::g_chams.good_players);
+
+            static bool through_walls = Features::Visuals::Chams::GetThroughWalls();
+            if (Widgets::Toggle("through walls", &through_walls))
+                Features::Visuals::Chams::SetThroughWalls(through_walls);
+
+            static const char* modes[] = { "magenta", "red", "blue" };
+            ImGui::Text("mode: %s", modes[Features::Visuals::Chams::CurrentMode()]);
+            ImGui::SameLine();
+            if (Widgets::Button("Cycle##chamsmode"))
+                Features::Visuals::Chams::CycleMode();
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.5f, 0.75f, 1.0f, 1.0f), "preset");
+
+            static int imin = (int)Features::Visuals::Chams::GetIndexMin();
+            static int imax = (int)Features::Visuals::Chams::GetIndexMax();
+            static int stride_filter = (int)Features::Visuals::Chams::GetStrideFilter();
+            static int ib_min_kb = (int)(Features::Visuals::Chams::GetIBMin() / 1024);
+            static int ib_max_kb = (int)(Features::Visuals::Chams::GetIBMax() / 1024);
+            static int inst_min = (int)Features::Visuals::Chams::GetInstanceMin();
+            static int inst_max = (int)Features::Visuals::Chams::GetInstanceMax();
+
+            auto apply = [](int i_min, int i_max, int st, int ib_min, int ib_max, int in_min, int in_max) {
+                Features::Visuals::Chams::SetIndexRange((unsigned)i_min, (unsigned)i_max);
+                Features::Visuals::Chams::SetStrideFilter((unsigned)st);
+                Features::Visuals::Chams::SetIBMin((unsigned)ib_min * 1024);
+                Features::Visuals::Chams::SetIBMax((unsigned)ib_max * 1024);
+                Features::Visuals::Chams::SetInstanceRange((unsigned)in_min, (unsigned)in_max);
+                imin = i_min; imax = i_max; stride_filter = st;
+                ib_min_kb = ib_min; ib_max_kb = ib_max;
+                inst_min = in_min; inst_max = in_max;
+                };
+
+            // Cuerpo perfecto (stride 32)
+            if (Widgets::Button("body only")) {
+                apply(1000, 300000, 32, 0, 0, 1, 1);
+            }
+            ImGui::SameLine();
+            // Armas + guantes (ignora stride 32, excluye props)
+            if (Widgets::Button("weapons + gloves")) {
+                apply(1000, 300000, 254, 2, 0, 1, 1);
+            }
+            ImGui::SameLine();
+            // Todo sin props
+            if (Widgets::Button("everything (clean)")) {
+                apply(1000, 300000, 0, 2, 0, 1, 1);
+            }
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.5f, 0.75f, 1.0f, 1.0f), "filter");
+
+            if (ImGui::SliderInt("idx min", &imin, 0, 300000))
+                Features::Visuals::Chams::SetIndexRange((unsigned)imin, (unsigned)imax);
+            if (ImGui::SliderInt("idx max", &imax, 0, 300000))
+                Features::Visuals::Chams::SetIndexRange((unsigned)imin, (unsigned)imax);
+
+            if (ImGui::SliderInt("inst min", &inst_min, 1, 64))
+                Features::Visuals::Chams::SetInstanceRange((unsigned)inst_min, (unsigned)inst_max);
+            if (ImGui::SliderInt("inst max", &inst_max, 1, 64))
+                Features::Visuals::Chams::SetInstanceRange((unsigned)inst_min, (unsigned)inst_max);
+
+            if (ImGui::SliderInt("stride filter", &stride_filter, 0, 255))
+                Features::Visuals::Chams::SetStrideFilter((unsigned)stride_filter);
+            ImGui::SameLine();
+            ImGui::TextDisabled("32=body, 254=not body");
+
+            if (ImGui::SliderInt("IB min (KB)", &ib_min_kb, 0, 2048))
+                Features::Visuals::Chams::SetIBMin((unsigned)ib_min_kb * 1024);
+
+            if (ImGui::SliderInt("IB max (KB)", &ib_max_kb, 0, 2048))
+                Features::Visuals::Chams::SetIBMax((unsigned)ib_max_kb * 1024);
         }
 
         Widgets::Section("camera");
