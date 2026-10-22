@@ -14,6 +14,7 @@ namespace Debug {
         int       bhop_active = 0;   // forzó IN_JUMP este tick
         int       fast_active = 0;   // zeroeó velocity
         int       counter_active = 0; // invirtió vector
+        int       access_violation_count = 0;
     };
 
     struct ThirdPersonState {

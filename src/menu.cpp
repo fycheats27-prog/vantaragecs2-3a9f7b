@@ -180,7 +180,6 @@ namespace Menu {
         Widgets::Toggle("enabled", &a.enabled);
         Widgets::Keybind("hold key", &a.key);
         Widgets::Toggle("toggle mode", &a.toggle_mode);
-        Widgets::Toggle("silent aim", &a.silent);
         Widgets::Toggle("target team", &a.target_team);
         Widgets::Toggle("show fov", &a.show_fov);
 
@@ -233,6 +232,51 @@ namespace Menu {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.42f, 0.47f, 0.54f, 1.0f));
         ImGui::Text("editing: %s", weapon_names[s_weapon_idx]);
         ImGui::PopStyleColor();
+    }
+
+    static void RageSilentAimTab() {
+        auto& s = g_cfg.rage.silent_aim;
+
+        Widgets::Section("global");
+        Widgets::Toggle("enabled", &s.enabled);
+        Widgets::Keybind("hold key", &s.key);
+        Widgets::Toggle("toggle mode", &s.toggle_mode);
+        Widgets::Toggle("target team", &s.target_team);
+        Widgets::Toggle("visible only", &s.visible_only);
+
+        Widgets::Section("fire");
+        Widgets::Toggle("auto fire", &s.auto_fire);
+        Widgets::Toggle("auto wall", &s.auto_wall);
+
+        Widgets::Section("targeting");
+        const char* sel[] = { "closest", "fov", "lowest hp" };
+        Widgets::Combo("selection", &s.selection, sel, IM_ARRAYSIZE(sel));
+        Widgets::SliderFloat("fov", &s.fov, 0.1f, 180.0f, "%.1f deg");
+        Widgets::SliderFloat("smooth", &s.smooth, 0.0f, 1.0f, "%.2f");
+        ImGui::TextDisabled("0.00 = perfect silent (no camera movement)");
+
+        Widgets::Section("hitboxes");
+        float cw = 100.0f;
+        Widgets::MultiToggle("head", &s.hit_head, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("neck", &s.hit_neck, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("chest", &s.hit_chest, cw);
+        Widgets::MultiToggle("stomach", &s.hit_stomach, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("pelvis", &s.hit_pelvis, cw); ImGui::SameLine(0, 6);
+        Widgets::MultiToggle("legs", &s.hit_legs, cw);
+
+        Widgets::Section("accuracy");
+        Widgets::SliderFloat("hit chance", &s.hit_chance, 0.0f, 100.0f, "%.0f%%");
+        Widgets::SliderFloat("min damage", &s.min_damage, 0.0f, 130.0f, "%.0f");
+
+        Widgets::Section("prediction");
+        Widgets::Toggle("enabled", &s.prediction);
+        if (s.prediction)
+            Widgets::SliderFloat("scale", &s.prediction_scale, 0.0f, 2.0f, "%.2fx");
+
+        Widgets::Section("backtrack");
+        Widgets::Toggle("enabled", &s.backtrack);
+        if (s.backtrack)
+            Widgets::SliderInt("ticks", &s.backtrack_ticks, 1, 16, "%d");
     }
 
     static void RageTriggerTab() {
@@ -365,13 +409,14 @@ namespace Menu {
     }
 
     static void RageTab() {
-        const char* subtabs[] = { "aimbot", "triggerbot", "accuracy", "exploits" };
+        const char* subtabs[] = { "aimbot", "silent aim", "triggerbot", "accuracy", "exploits" };
         SubTabs(subtabs, IM_ARRAYSIZE(subtabs), &g_rage_subtab);
         switch (g_rage_subtab) {
-        case 0: RageAimbotTab();   break;
-        case 1: RageTriggerTab();  break;
-        case 2: RageAccuracyTab(); break;
-        case 3: RageExploitsTab(); break;
+        case 0: RageAimbotTab();    break;
+        case 1: RageSilentAimTab(); break;
+        case 2: RageTriggerTab();   break;
+        case 3: RageAccuracyTab();  break;
+        case 4: RageExploitsTab();  break;
         }
     }
 
@@ -566,7 +611,8 @@ namespace Menu {
         Widgets::Section("movement");
         Widgets::Toggle("bhop", &g_cfg.misc.movement.bhop);
         Widgets::Toggle("fast stop", &g_cfg.misc.movement.fast_stop);
-        Widgets::Toggle("counter strafe", &g_cfg.misc.movement.counter_strafe);
+        Widgets::Toggle("auto strafe", &g_cfg.misc.movement.auto_strafe);
+        Widgets::Toggle("counter strafe", & g_cfg.misc.movement.counter_strafe);
     }
 
     static void MiscWorldTab() {
@@ -578,18 +624,23 @@ namespace Menu {
 
     static void MiscExploitsTab() {
         Widgets::Section("exploits");
+
+        // Toggle de Anti Untrusted corregido
         Widgets::Toggle("anti untrusted", &g_cfg.misc.exploits.anti_untrusted);
 
+        // Toggle de Clan Tag sincronizado
         Widgets::Toggle("clan tag", &g_cfg.misc.exploits.clantag);
-        if (g_cfg.misc.exploits.clantag)
-            Widgets::InputText("tag", g_cfg.misc.exploits.clantag_text,
-                sizeof(g_cfg.misc.exploits.clantag_text));
+        if (g_cfg.misc.exploits.clantag) {
+            Widgets::InputText("tag", g_cfg.misc.exploits.clantag_text, sizeof(g_cfg.misc.exploits.clantag_text));
+        }
 
+        // Toggle de Chat Spam sincronizado
         Widgets::Toggle("chat spam", &g_cfg.misc.exploits.chat_spam);
-        if (g_cfg.misc.exploits.chat_spam)
-            Widgets::InputText("message", g_cfg.misc.exploits.chat_text,
-                sizeof(g_cfg.misc.exploits.chat_text));
+        if (g_cfg.misc.exploits.chat_spam) {
+            Widgets::InputText("message", g_cfg.misc.exploits.chat_text, sizeof(g_cfg.misc.exploits.chat_text));
+        }
     }
+
 
     static void MiscInputTab() {
         Widgets::Section("input");

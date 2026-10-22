@@ -82,6 +82,37 @@ struct RageAimbot_t {
     }
 };
 
+
+struct SilentAimConfig {
+    bool  enabled = false;
+    int   key = 0;
+    bool  toggle_mode = false;
+    bool  target_team = false;
+    bool  visible_only = false;
+    bool  auto_fire = false;
+    bool  auto_wall = false;
+
+    int   selection = 0;      // 0=closest 1=fov 2=lowest hp
+    float fov = 15.0f;
+    float smooth = 0.0f;   // 0 = perfect silent
+
+    bool  hit_head = true;
+    bool  hit_neck = true;
+    bool  hit_chest = true;
+    bool  hit_stomach = true;
+    bool  hit_pelvis = false;
+    bool  hit_legs = false;
+
+    float hit_chance = 100.0f;
+    float min_damage = 25.0f;
+
+    bool  prediction = false;
+    float prediction_scale = 1.0f;
+
+    bool  backtrack = false;
+    int   backtrack_ticks = 12;
+};
+
 // ──────────────── TRIGGERBOT ────────────────
 struct TriggerWeaponConfig {
     bool  enabled = true;
@@ -138,6 +169,7 @@ struct RageExploits_t {
 
 struct RageConfig_t {
     RageAimbot_t   aimbot;
+    SilentAimConfig silent_aim;
     RageTrigger_t  trigger;
     RageAccuracy_t accuracy;
     RageExploits_t exploits;
@@ -208,6 +240,17 @@ struct VisualsWorld_t {
     bool  bomb_timer = false;
     bool  damage_markers = false;
     bool  no_scope = false;
+
+    bool  grenade_helper = false;
+    int   grenade_helper_key = VK_F6;
+    bool  grenade_helper_only_held = true;
+    int   grenade_helper_capture_kind = 0;   // 0=Auto, 1=HE, 2=Flash, 3=Smoke, 4=Molly, 5=Decoy
+    char  grenade_helper_capture_name[64] = "Lineup";
+    float grenade_helper_color[4] = { 0.47f, 0.75f, 1.00f, 1.00f };
+    float grenade_helper_aim_color[4] = { 1.00f, 0.66f, 0.29f, 1.00f };
+    int   grenade_helper_select_dist = 400;
+    int   grenade_helper_stand_dist = 600;
+    int   grenade_helper_aim_dist = 8;
 };
 
 struct VisualsConfig_t {
@@ -230,7 +273,8 @@ struct MiscWorld_t {
 };
 
 struct MiscExploits_t {
-    bool anti_untrusted = false;
+    bool anti_untrusted = true;
+    bool clean_tag = false;
     bool clantag = false;
     bool chat_spam = false;
     char clantag_text[16] = "vanta";

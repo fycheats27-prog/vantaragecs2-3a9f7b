@@ -6,6 +6,7 @@
         "Includes": [
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\createmove.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\bhop.h",
+            "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\misc.h",
             "e:\\aprendiendo c++\\src services\\cheats\\vantaragecs2\\src\\config.h",
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\um\\windows.h",
             "c:\\program files (x86)\\windows kits\\10\\include\\10.0.26100.0\\shared\\winapifamily.h",

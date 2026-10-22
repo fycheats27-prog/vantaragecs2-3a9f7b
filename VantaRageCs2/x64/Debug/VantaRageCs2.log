@@ -1,2 +1,2 @@
-﻿  chams.cpp
-  VantaRageCs2.vcxproj -> E:\Aprendiendo C++\SRC SERVICES\Cheats\VantaRageCs2\x64\Debug\VantaRageCs2.dll
+﻿  silent.cpp
+E:\Aprendiendo C++\SRC SERVICES\Cheats\VantaRageCs2\src\silent.cpp(44,10): error C1083: No se puede abrir el archivo incluir: 'CUserCmd.h': No such file or directory

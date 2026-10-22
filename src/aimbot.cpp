@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <cmath>
 #include <thread>
+#include <chrono>
 #include <atomic>
 #include <cstdint>
 #include <vector>
@@ -16,6 +17,8 @@
 namespace Features::Rage::Aimbot {
 
     struct Vec3 { float x = 0.f, y = 0.f, z = 0.f; };
+
+    static constexpr float kFallbackFov = 180.f;
 
     static constexpr uintptr_t dwEntityList = 0x271A908;
     static constexpr uintptr_t dwLocalPlayerPawn = 0x2565718;
@@ -172,17 +175,19 @@ namespace Features::Rage::Aimbot {
         return 800.f;
     }
 
+    // FOV configurado para el arma actual (usado por la UI). Fallback consistente.
     int GetFov() {
         uintptr_t client = Memory::GetModuleBase("client.dll");
-        if (!client) return 15;
+        if (!client) return (int)kFallbackFov;
         uintptr_t local = SafeRead<uintptr_t>(client + dwLocalPlayerPawn);
-        if (!local) return 15;
+        if (!local) return (int)kFallbackFov;
         uintptr_t wpn = GetActiveWeapon(client, local);
-        if (!wpn) return 15;
+        if (!wpn) return (int)kFallbackFov;
         char designer[64]{};
         ReadDesigner(wpn, designer, sizeof(designer));
         WeaponCategory cat = CategorizeWeapon(designer);
-        return g_cfg.rage.aimbot.weapons[(int)cat].fov;
+        int fov = g_cfg.rage.aimbot.weapons[(int)cat].fov;
+        return (fov > 0) ? fov : (int)kFallbackFov;
     }
 
     WeaponCategory GetCurrentCategory() {
@@ -289,9 +294,11 @@ namespace Features::Rage::Aimbot {
             }
 
             const WeaponConfig& w = cfg.weapons[(int)cached_cat];
-            Debug::g_aim.fov = (w.fov > 0) ? w.fov : 180;
+            float fov_limit = (w.fov > 0) ? (float)w.fov : kFallbackFov;
+            Debug::g_aim.fov = static_cast<int>(std::lround(fov_limit));
 
-            int  my_team = SafeRead<uint8_t>(local + m_iTeamNum);
+            uint8_t my_team_b = SafeRead<uint8_t>(local + m_iTeamNum);
+            int  my_team = my_team_b;
             Vec3 local_origin = SafeRead<Vec3>(local + m_vOldOrigin);
             Vec3 eye = local_origin;
             eye.z += 64.f;
@@ -303,7 +310,6 @@ namespace Features::Rage::Aimbot {
             Debug::g_aim.cur_pitch = cur.x;
             Debug::g_aim.cur_yaw = cur.y;
 
-            float fov_limit = (w.fov > 0) ? (float)w.fov : 180.f;
             std::vector<int> bone_ids = GetSelectedBones(w);
 
             std::vector<Candidate> cands;
@@ -327,7 +333,8 @@ namespace Features::Rage::Aimbot {
                 int hp = SafeRead<int>(pawn + m_iHealth);
                 if (hp <= 0 || hp > 100) continue;
 
-                int team = SafeRead<uint8_t>(pawn + m_iTeamNum);
+                uint8_t team_b = SafeRead<uint8_t>(pawn + m_iTeamNum);
+                int team = team_b;
                 if (team != 2 && team != 3) continue;
                 if (team == my_team && !cfg.target_team) continue;
 
@@ -363,7 +370,7 @@ namespace Features::Rage::Aimbot {
                     if (fov > fov_limit) continue;
 
                     cands.push_back({ pawn, aim_ang, fov, d, bone_idx });
-                    break;
+                    break; // mayor prioridad del arma que esté dentro de FOV
                 }
             }
 

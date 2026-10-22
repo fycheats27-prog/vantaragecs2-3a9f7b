@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <cmath>
 #include <thread>
+#include <chrono>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -15,6 +16,8 @@
 namespace Features::Rage::Triggerbot {
 
     struct Vec3 { float x = 0.f, y = 0.f, z = 0.f; };
+
+    static constexpr float kFallbackFov = 180.f;
 
     static constexpr uintptr_t dwEntityList = 0x271A908;
     static constexpr uintptr_t dwLocalPlayerPawn = 0x2565718;
@@ -31,6 +34,9 @@ namespace Features::Rage::Triggerbot {
     static constexpr int m_modelState = 0x140;
     static constexpr int m_pBoneArray = 0x80;
     static constexpr int m_bDormant = 0x103;
+
+    static constexpr int kAttackOn = 65537; // 0x10001
+    static constexpr int kAttackOff = 256;   // 0x100
 
     static std::atomic<bool> g_running{ false };
     static std::thread g_thread;
@@ -83,7 +89,6 @@ namespace Features::Rage::Triggerbot {
         return { cosf(rx) * cosf(ry), cosf(rx) * sinf(ry), -sinf(rx) };
     }
 
-    // ángulo entre dos vectores en grados
     static float AngleBetween(const Vec3& a, const Vec3& b) {
         float la = sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
         float lb = sqrtf(b.x * b.x + b.y * b.y + b.z * b.z);
@@ -94,7 +99,6 @@ namespace Features::Rage::Triggerbot {
         return acosf(dot) * 57.29577951308232f;
     }
 
-    // Devuelve el pawn cuyo hueso está más cerca del crosshair, o 0 si no hay ninguno en FOV
     static uintptr_t FindTargetOnCrosshair(
         uintptr_t client, uintptr_t local, uintptr_t es,
         const Vec3& eye, const Vec3& cur_view,
@@ -103,7 +107,8 @@ namespace Features::Rage::Triggerbot {
     {
         Vec3 view_dir = ForwardFromAngles(cur_view);
         uintptr_t best_pawn = 0;
-        float best_angle = w.fov;
+        float fov_limit = (w.fov > 0.f) ? w.fov : kFallbackFov;
+        float best_angle = fov_limit;
         std::vector<int> bone_ids = GetSelectedBones(w);
 
         for (int i = 1; i < 64; ++i) {
@@ -123,7 +128,8 @@ namespace Features::Rage::Triggerbot {
             int hp = SafeRead<int>(pawn + m_iHealth);
             if (hp <= 0 || hp > 100) continue;
 
-            int team = SafeRead<uint8_t>(pawn + m_iTeamNum);
+            uint8_t team_b = SafeRead<uint8_t>(pawn + m_iTeamNum);
+            int team = team_b;
             if (team != 2 && team != 3) continue;
             if (team == my_team && !target_team) continue;
 
@@ -194,7 +200,7 @@ namespace Features::Rage::Triggerbot {
             }
 
             if (!t.enabled || !hotkey_active) {
-                if (attack_virtual) { SafeWrite(client + dwForceAttack, 256); attack_virtual = false; }
+                if (attack_virtual) { SafeWrite(client + dwForceAttack, kAttackOff); attack_virtual = false; }
                 last_target = 0;
                 first_seen_ms = 0;
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -206,7 +212,7 @@ namespace Features::Rage::Triggerbot {
             const TriggerWeaponConfig& w = t.weapons[(int)cat];
 
             if (!w.enabled) {
-                if (attack_virtual) { SafeWrite(client + dwForceAttack, 256); attack_virtual = false; }
+                if (attack_virtual) { SafeWrite(client + dwForceAttack, kAttackOff); attack_virtual = false; }
                 last_target = 0;
                 first_seen_ms = 0;
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -215,7 +221,7 @@ namespace Features::Rage::Triggerbot {
 
             uintptr_t local = SafeRead<uintptr_t>(client + dwLocalPlayerPawn);
             if (!local) {
-                if (attack_virtual) { SafeWrite(client + dwForceAttack, 256); attack_virtual = false; }
+                if (attack_virtual) { SafeWrite(client + dwForceAttack, kAttackOff); attack_virtual = false; }
                 last_target = 0;
                 first_seen_ms = 0;
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -228,7 +234,8 @@ namespace Features::Rage::Triggerbot {
                 continue;
             }
 
-            int  my_team = SafeRead<uint8_t>(local + m_iTeamNum);
+            uint8_t my_team_b = SafeRead<uint8_t>(local + m_iTeamNum);
+            int  my_team = my_team_b;
             Vec3 local_origin = SafeRead<Vec3>(local + m_vOldOrigin);
             Vec3 eye = local_origin;
             eye.z += 64.f;
@@ -241,7 +248,7 @@ namespace Features::Rage::Triggerbot {
             // ── Si el usuario ya está disparando, no interferimos ──
             bool user_lmb = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
             if (user_lmb) {
-                if (attack_virtual) { SafeWrite(client + dwForceAttack, 256); attack_virtual = false; }
+                if (attack_virtual) { SafeWrite(client + dwForceAttack, kAttackOff); attack_virtual = false; }
                 last_target = 0;
                 first_seen_ms = 0;
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -252,21 +259,19 @@ namespace Features::Rage::Triggerbot {
             uint64_t now_ms = GetTickCount64();
 
             if (!target) {
-                if (attack_virtual) { SafeWrite(client + dwForceAttack, 256); attack_virtual = false; }
+                if (attack_virtual) { SafeWrite(client + dwForceAttack, kAttackOff); attack_virtual = false; }
                 last_target = 0;
                 first_seen_ms = 0;
             }
             else if (target != last_target) {
-                // target nuevo → reiniciar timer
                 last_target = target;
                 first_seen_ms = now_ms;
-                if (attack_virtual) { SafeWrite(client + dwForceAttack, 256); attack_virtual = false; }
+                if (attack_virtual) { SafeWrite(client + dwForceAttack, kAttackOff); attack_virtual = false; }
             }
             else {
-                // mismo target → comprobar delay
                 if (now_ms - first_seen_ms >= (uint64_t)w.delay_ms) {
                     if (!attack_virtual) {
-                        SafeWrite(client + dwForceAttack, 65537);
+                        SafeWrite(client + dwForceAttack, kAttackOn);
                         attack_virtual = true;
                     }
                 }
@@ -286,6 +291,6 @@ namespace Features::Rage::Triggerbot {
         if (g_thread.joinable()) g_thread.join();
 
         uintptr_t client = Memory::GetModuleBase("client.dll");
-        if (client) SafeWrite(client + dwForceAttack, 256);
+        if (client) SafeWrite(client + dwForceAttack, kAttackOff);
     }
 }
